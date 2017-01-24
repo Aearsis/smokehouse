@@ -1,5 +1,9 @@
 package cz.eideo.smokehouse.common;
 
+import cz.eideo.smokehouse.common.api.BlackHole;
+import cz.eideo.smokehouse.common.api.Endpoint;
+import cz.eideo.smokehouse.common.setup.CubeSetup;
+
 /**
  * Sessions represent one smoking. They have fixed setup, which is saved into the storage and loaded.
  */
@@ -11,6 +15,8 @@ public class Session {
 
     private SessionStorage storage;
     private Setup setup;
+
+    private Endpoint API = BlackHole.SINGULARITY;
 
     public Session(SessionStorage storage) {
         this.storage = storage;
@@ -37,5 +43,17 @@ public class Session {
 
     public Setup getSetup() {
         return setup;
+    }
+
+    public SessionStorage getStorage() {
+        return storage;
+    }
+
+    public Endpoint getAPI() {
+        return API;
+    }
+
+    public void setAPI(Endpoint API) {
+        this.API = API;
     }
 }

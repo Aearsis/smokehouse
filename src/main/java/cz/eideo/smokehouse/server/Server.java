@@ -1,11 +1,16 @@
 package cz.eideo.smokehouse.server;
 
 import cz.eideo.smokehouse.common.Session;
-import cz.eideo.smokehouse.common.SessionStorage;
-import cz.eideo.smokehouse.common.Setup;
+import cz.eideo.smokehouse.common.api.MulticastProvider;
+import cz.eideo.smokehouse.common.setup.CubeSetup;
 import cz.eideo.smokehouse.common.storage.*;
+import cz.eideo.smokehouse.showcase.CubeRandomFeeder;
 import sun.misc.Signal;
+
+import java.io.IOException;
 import java.sql.SQLException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Server instance. It initializes the environment for running server.
@@ -19,26 +24,55 @@ class Server {
 
     private final Session session;
 
+    ServerArguments args;
+    MulticastProvider serverAPI;
+
     Server (ServerArguments args) {
+        this.args = args;
         try {
-            SessionStorage storage = new SessionSQLiteStorage(SQLiteStorage.fromFile(args.dbName));
+            ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+            serverAPI = new MulticastProvider(executorService, args.groupAddress, args.port);
+
+            Thread apiThread = new Thread(serverAPI);
+            apiThread.setName("Server API");
+            apiThread.setDaemon(true);
+            apiThread.start();
+
+            SQLiteSessionStorage storage = new SQLiteSessionStorage(SQLiteStorage.fromFile(args.dbName));
+            storage.attachAPI(serverAPI);
+
+            if (storage.getState() == Session.State.NEW) {
+                storage.setSetupClass(CubeSetup.class);
+                storage.setState(Session.State.INITIALIZED);
+                storage.flush();
+            }
+
             session = new Session(storage);
+            session.setAPI(serverAPI);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException("Nenalezena odpovídající konfigurace udírny.", e);
-        } catch (SQLException e) {
+        } catch (IOException | SQLException e) {
             throw new RuntimeException("Nezdařila se inicializace serveru: " + e.getMessage(), e);
         }
     }
 
     void run() {
         session.loadSetup();
-        Setup s = session.getSetup();
-        s.setupCommon();
-        s.setupServer();
+        CubeSetup s = (CubeSetup) session.getSetup();
 
-        s.startServer();
+        if (s == null)
+            throw new RuntimeException("This server can only work with CubeSetup.");
 
-        Signal.handle(new Signal("TERM"), signal -> s.stopServer());
+        s.setupSensors();
+
+        CubeRandomFeeder feeder = new CubeRandomFeeder(s);
+
+        feeder.setup();
+        feeder.start();
+
+        Signal.handle(new Signal("TERM"), signal -> {
+            feeder.stop();
+        });
     }
 }
 

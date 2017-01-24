@@ -1,16 +1,28 @@
 package cz.eideo.smokehouse.server;
 
-class ServerArguments {
-    String dbName;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
-    private ServerArguments() {}
+public class ServerArguments {
+    public String dbName;
+    public InetAddress groupAddress = InetAddress.getByAddress(new byte[] {(byte) 239, 42, 84, 18} );
+    public int port = 42424;
 
-    static ServerArguments parseFromArgv(String[] argv) {
+    private ServerArguments() throws UnknownHostException {}
+
+    static ServerArguments parseFromArgv(String[] argv) throws UnknownHostException {
         if (argv.length < 1)
-            throw new RuntimeException("You must supply at least the file with database.");
+            throw new RuntimeException("arguments: <db file> [multicast group] [port]");
 
         ServerArguments a = new ServerArguments();
         a.dbName = argv[0];
+
+        if (argv.length >= 2)
+            a.groupAddress = InetAddress.getByName(argv[1]);
+
+        if (argv.length >= 3)
+            a.port = Integer.parseInt(argv[3]);
+
         return a;
     }
 }

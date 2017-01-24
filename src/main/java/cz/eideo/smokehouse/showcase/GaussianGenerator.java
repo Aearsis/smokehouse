@@ -8,24 +8,24 @@ import java.util.Random;
 public class GaussianGenerator implements RealNumberGenerator {
 
     /**
-     * Generator will generate gaussian numbers with sigma and add them to the last generator.
+     * Generator will generate gaussian numbers with specified
+     * variability and add them to the last generator.
      */
-    private double sigma;
+    private double var;
     private RealNumberGenerator generator;
 
     private Random r;
 
 
-    public GaussianGenerator(double sigma, RealNumberGenerator generator) {
+    public GaussianGenerator(double var, RealNumberGenerator generator) {
         r = new Random();
-        this.sigma = sigma;
+        this.var = var;
         this.generator = generator;
-        generateNext();
     }
 
     public double generateNext()
     {
-        return generator.generateNext() + (r.nextGaussian() * sigma);
+        return generator.generateNext() + (r.nextGaussian() * var);
     }
 
 }
