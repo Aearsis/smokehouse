@@ -1,6 +1,7 @@
 package cz.eideo.smokehouse.common.setup;
 
 import cz.eideo.smokehouse.common.Setup;
+import cz.eideo.smokehouse.common.sensor.SensorFactory;
 import cz.eideo.smokehouse.common.sensor.ThermoArea;
 import cz.eideo.smokehouse.common.sensor.Thermometer;
 
@@ -26,20 +27,31 @@ public class CubeSetup extends Setup {
     private ThermoArea[] thermoAreas;
 
     private void createThermometer(int i) {
-        Thermometer t = new Thermometer(session.getAPI());
-        thermometers[i] = t;
-        getColumnArea(i % 9).addThermometer(t);
-        getPlaneArea(i >= 9 ? 1 : 0).addThermometer(t);
-        getCubeArea().addThermometer(t);
+        try {
+            Thermometer t = sensorFactory.createThermometer(Integer.toHexString(i));
+            thermometers[i] = t;
+            getColumnArea(i % 9).addThermometer(t);
+            getPlaneArea(i >= 9 ? 1 : 0).addThermometer(t);
+            getCubeArea().addThermometer(t);
+        } catch (SensorFactory.FactoryException e) {
+            throw new RuntimeException("Cannot create Thermometer.", e);
+        }
     }
 
     @Override
     public void setupSensors() {
+        if (sensorFactory == null)
+            throw new Error("SensorFactory must be set first.");
+
         thermometers = new Thermometer[18];
         thermoAreas = new ThermoArea[1 + 2 + 9];
 
         for (int i = 0; i < thermoAreas.length; i++)
-            thermoAreas[i] = new ThermoArea(session.getAPI());
+            try {
+                thermoAreas[i] = sensorFactory.createThermoArea(Integer.toHexString(i));
+            } catch (SensorFactory.FactoryException e) {
+                throw new RuntimeException("Cannot create ThermoArea.", e);
+            }
 
         for (int i = 0; i < 18; i++)
            createThermometer(i);

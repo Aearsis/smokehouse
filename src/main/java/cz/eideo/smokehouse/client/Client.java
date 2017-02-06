@@ -3,6 +3,7 @@ package cz.eideo.smokehouse.client;
 import cz.eideo.smokehouse.common.Session;
 import cz.eideo.smokehouse.common.SessionStorage;
 import cz.eideo.smokehouse.common.api.MulticastConsumer;
+import cz.eideo.smokehouse.common.sensor.DefaultSensorFactory;
 import cz.eideo.smokehouse.common.setup.CubeSetup;
 import sun.misc.Signal;
 
@@ -48,6 +49,7 @@ class Client {
         if (s == null)
             throw new RuntimeException("Pro tento setup není klient připraven.");
 
+        s.setSensorFactory(new DefaultSensorFactory(clientAPI));
         s.setupSensors();
 
         CubeConsoleDumper dumper = new CubeConsoleDumper(s);

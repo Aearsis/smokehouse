@@ -34,7 +34,6 @@ public class Session {
 
         try {
             setup = (Setup) storage.getSetupClass().newInstance();
-            setup.setSession(this);
         } catch (InstantiationException | IllegalAccessException e) {
             throw new RuntimeException(String.format("Setup %s nelze načítat dynamicky.", storage.getSetupClass()), e);
         }

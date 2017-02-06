@@ -3,6 +3,7 @@ package cz.eideo.smokehouse.common;
 import cz.eideo.smokehouse.common.api.Endpoint;
 import cz.eideo.smokehouse.common.api.StorageNode;
 import cz.eideo.smokehouse.common.api.codec.Codec;
+import cz.eideo.smokehouse.common.storage.RealNumberSensorStorage;
 import cz.eideo.smokehouse.common.util.Observer;
 
 import java.time.Instant;
@@ -23,7 +24,6 @@ abstract public class StorageSource<T> extends StorageNode<T> implements Source<
     public T getTimedValue(Instant time) {
         return null;
     }
-
 
 
     /* Sadly we need to reimplement observableObject,

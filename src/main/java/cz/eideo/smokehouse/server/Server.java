@@ -2,6 +2,7 @@ package cz.eideo.smokehouse.server;
 
 import cz.eideo.smokehouse.common.Session;
 import cz.eideo.smokehouse.common.api.MulticastProvider;
+import cz.eideo.smokehouse.common.sensor.SQLiteStoredSensorFactory;
 import cz.eideo.smokehouse.common.setup.CubeSetup;
 import cz.eideo.smokehouse.common.storage.SQLiteSessionStorage;
 import cz.eideo.smokehouse.common.storage.SQLiteStorage;
@@ -24,6 +25,7 @@ import java.util.concurrent.ScheduledExecutorService;
 class Server {
 
     private final Session session;
+    private final SQLiteStorage db;
 
     ServerArguments args;
     MulticastProvider serverAPI;
@@ -39,7 +41,8 @@ class Server {
             apiThread.setDaemon(true);
             apiThread.start();
 
-            SQLiteSessionStorage storage = new SQLiteSessionStorage(serverAPI, SQLiteStorage.fromFile(args.dbName));
+            db = SQLiteStorage.fromFile(args.dbName);
+            SQLiteSessionStorage storage = new SQLiteSessionStorage(serverAPI, db.getNamespace("session"));
 
             if (storage.getState() == Session.State.NEW) {
                 storage.setSetupClass(CubeSetup.class);
@@ -63,6 +66,7 @@ class Server {
         if (s == null)
             throw new RuntimeException("This server can only work with CubeSetup.");
 
+        s.setSensorFactory(new SQLiteStoredSensorFactory(session.getAPI(), db));
         s.setupSensors();
 
         CubeRandomFeeder feeder = new CubeRandomFeeder(s);
@@ -71,14 +75,6 @@ class Server {
 
         Signal.handle(new Signal("TERM"), signal -> feeder.stop());
 
-        while (true) {
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            serverAPI.dumpNodes();
-        }
     }
 }
 

@@ -7,7 +7,7 @@ public class SQLiteStorage {
     private Connection connection;
     private String namespace;
 
-    private final String namespaceDelimiter = "/";
+    private final String namespaceDelimiter = "_";
 
     public SQLiteStorage(Connection connection, String namespace) {
         this.connection = connection;
@@ -15,7 +15,7 @@ public class SQLiteStorage {
     }
 
     public SQLiteStorage getNamespace(String subnamespace) {
-        return new SQLiteStorage(connection, getNamespaced(subnamespace));
+        return new SQLiteStorage(connection, "".equals(namespace) ? subnamespace : getNamespaced(subnamespace));
     }
 
     protected String getNamespace() {

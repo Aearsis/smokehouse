@@ -14,13 +14,16 @@ import java.sql.Statement;
  */
 public class SQLiteSessionStorage extends SessionStorage {
 
-    private SQLiteStorage storage;
+    private final SQLiteStorage storage;
+
+    private final String table_name;
 
     private final int current_version = 1;
 
     public SQLiteSessionStorage(Endpoint API, SQLiteStorage storage) throws SQLException, ClassNotFoundException {
         super(API);
         this.storage = storage;
+        table_name = this.storage.getNamespaced("state");
         loadState();
     }
 
@@ -29,7 +32,7 @@ public class SQLiteSessionStorage extends SessionStorage {
 
             ResultSet rs = null;
             try {
-                rs = stmt.executeQuery("SELECT * FROM session_state");
+                rs = stmt.executeQuery("SELECT * FROM " + table_name);
             } catch (SQLException e) {
                 loadDefaults();
                 createDatabase();
@@ -58,19 +61,17 @@ public class SQLiteSessionStorage extends SessionStorage {
 
     private void createDatabase() throws SQLException {
         try (Statement stmt = storage.createStatement()) {
-            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS session_state (" +
+            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS " + table_name + " (" +
                     "version INTEGER NOT NULL," +
                     "state TEXT NOT NULL," +
                     "setupClass TEXT NOT NULL," +
                     "PRIMARY KEY (version) ON CONFLICT REPLACE)");
         }
-
-        saveState();
     }
 
-    private final static String update_query = "INSERT INTO session_state VALUES (?, ?, ?)";
 
     private void saveState() throws SQLException {
+        String update_query = "INSERT INTO " + table_name + " VALUES (?, ?, ?)";
         try (PreparedStatement stmt = storage.prepareStatement(update_query)) {
             stmt.setInt(1, current_version);
             stmt.setString(2, getState().toString());

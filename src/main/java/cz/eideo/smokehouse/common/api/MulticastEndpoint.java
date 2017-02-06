@@ -29,7 +29,7 @@ abstract public class MulticastEndpoint extends Container implements Runnable {
         this.port = port;
 
         sock = new MulticastSocket(port);
-        sock.setNetworkInterface(NetworkInterface.getByName("enp0s25"));
+        //sock.setNetworkInterface(NetworkInterface.getByName("enp0s25"));
         sock.setLoopbackMode(false);
         sock.setTimeToLive(255);
         sock.joinGroup(group);
