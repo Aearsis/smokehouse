@@ -1,7 +1,6 @@
 package cz.eideo.smokehouse.common.feeder;
 
-import cz.eideo.smokehouse.common.RealNumberFeeder;
-import cz.eideo.smokehouse.common.RealNumberSource;
+import cz.eideo.smokehouse.common.StorageSource;
 
 import java.io.InputStream;
 import java.util.Scanner;
@@ -9,14 +8,14 @@ import java.util.Scanner;
 /**
  * Parses input stream. Fixed number of sensors N. Reads double value in cyclic order.
  */
-public class TextFeeder extends RealNumberFeeder {
+public class TextFeeder {
 
     Scanner input;
-    RealNumberSource[] sensors;
+    StorageSource[] sensors;
 
     int currentSensor = 0;
 
-    public TextFeeder(InputStream input, RealNumberSource[] sensors) {
+    public TextFeeder(InputStream input, StorageSource[] sensors) {
         this.input = new Scanner(input);
         this.sensors = sensors;
     }

@@ -1,5 +1,6 @@
 package cz.eideo.smokehouse.common.api;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.concurrent.ScheduledExecutorService;
@@ -26,10 +27,18 @@ public class MulticastProvider extends MulticastEndpoint {
     }
 
     @Override
-    protected void processPacket(Packet packet) {
+    protected void processPacket(Packet packet, DataInputStream stream) throws IOException {
         switch (packet.type) {
             case Packet.QUERY:
                 announceValueChanged(packet.key);
+
+                break;
+            case Packet.VALUE:
+                if (nodes.size() <= packet.key)
+                    throw new PacketInvalidException("Received packet for unknown node.");
+
+                // We don't need the value, but we need to advance the stream correctly
+                nodes.get(packet.key).getCodec().decode(stream);
                 break;
         }
     }

@@ -10,12 +10,12 @@ import java.security.InvalidParameterException;
  */
 abstract public class RealNumberObserver implements Observer {
 
-    protected RealNumberSource sensor;
+    protected StorageSource sensor;
 
     @Override
     public void attached(Observable s) {
-        if (!(s instanceof RealNumberSource))
+        if (!(s instanceof StorageSource))
             throw new InvalidParameterException("Invalid observable.");
-        this.sensor = (RealNumberSource) s;
+        this.sensor = (StorageSource) s;
     }
 }

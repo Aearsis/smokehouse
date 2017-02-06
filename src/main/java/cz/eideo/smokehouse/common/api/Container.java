@@ -20,4 +20,11 @@ abstract public class Container implements Iterable<Node>, Endpoint {
     public Iterator<Node> iterator() {
         return nodes.iterator();
     }
+
+    public void dumpNodes() {
+        for (int i = 0; i < nodes.size(); i++) {
+            System.err.printf("node %d: ", i);
+            nodes.get(i).dump();
+        }
+    }
 }

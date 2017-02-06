@@ -1,9 +1,7 @@
 package cz.eideo.smokehouse.showcase;
 
-import cz.eideo.smokehouse.common.RealNumberObserver;
 import cz.eideo.smokehouse.common.sensor.Thermometer;
 import cz.eideo.smokehouse.common.setup.CubeSetup;
-import cz.eideo.smokehouse.showcase.*;
 
 import java.util.Random;
 import java.util.concurrent.Executors;
@@ -14,7 +12,7 @@ public class CubeRandomFeeder {
 
     private static final long DELAY = 1000;
     private CubeSetup setup;
-    private RealNumberRandomFeeder[] feeders;
+    private RealNumberGenerator[] feeders = new RealNumberGenerator[18];
 
     private RealNumberGenerator shared;
     private RealNumberGenerator initial;
@@ -25,6 +23,9 @@ public class CubeRandomFeeder {
         this.setup = setup;
         shared = createSharedGenerator();
         initial = new GaussianGenerator(5, () -> 80);
+
+        for (int i = 0; i < 18; i++)
+            feeders[i] = createSimulatingGenerator();
     }
 
     private RealNumberGenerator createSharedGenerator() {
@@ -40,23 +41,11 @@ public class CubeRandomFeeder {
      * This pipeline from generators simulate temperatures that behave similarly to real temperatures.
      */
     private RealNumberGenerator createSimulatingGenerator() {
-        RealNumberGenerator gen = new IntegratingGenerator(initial.generateNext(), this.shared);
-        gen = new ClampingGenerator(22, 120, gen);   // Clamp temperature to real values
+        RealNumberGenerator gen = new WeightedZeroGenerator(this.shared);          //  Balance the shared to zero
+        gen = new IntegratingGenerator(initial.generateNext(), gen);
+        gen = new LimitingGenerator(22, 120, gen);   // Limit temperature to real values
         gen = new GaussianGenerator(0.05, gen);           // .. but add a random offset to make it look better on extremes
         return gen;
-    }
-
-    public void setup() {
-        feeders = new RealNumberRandomFeeder[18];
-        Random r = new Random();
-
-        for (int i = 0; i < 18; i++) {
-            final String format = String.format("Temperature on %d changed to %%.1f °C", i);
-
-            Thermometer t = setup.getThermometer(i);
-            feeders[i] = new RealNumberRandomFeeder(createSimulatingGenerator());
-            feeders[i].setSensor(t);
-        }
     }
 
     ScheduledExecutorService feederExecutor;
@@ -65,8 +54,11 @@ public class CubeRandomFeeder {
         feederExecutor = Executors.newSingleThreadScheduledExecutor();
 
         for (int i = 0; i < 18; i++) {
-            int index = i;
-            feederExecutor.scheduleAtFixedRate(feeders[index]::emit, 0, DELAY, TimeUnit.MILLISECONDS);
+            final Thermometer t = setup.getThermometer(i);
+            final RealNumberGenerator gen = feeders[i];
+            feederExecutor.scheduleAtFixedRate(() -> {
+                t.updateValue(gen.generateNext());
+            }, 0, DELAY, TimeUnit.MILLISECONDS);
         }
     }
 

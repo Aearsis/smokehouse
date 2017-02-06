@@ -3,6 +3,7 @@ package cz.eideo.smokehouse.common.storage;
 import cz.eideo.smokehouse.common.Session;
 import cz.eideo.smokehouse.common.SessionStorage;
 import cz.eideo.smokehouse.common.Setup;
+import cz.eideo.smokehouse.common.api.Endpoint;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -18,7 +19,8 @@ public class SQLiteSessionStorage extends SessionStorage {
 
     private final int current_version = 1;
 
-    public SQLiteSessionStorage(SQLiteStorage storage) throws SQLException, ClassNotFoundException {
+    public SQLiteSessionStorage(Endpoint API, SQLiteStorage storage) throws SQLException, ClassNotFoundException {
+        super(API);
         this.storage = storage;
         loadState();
     }

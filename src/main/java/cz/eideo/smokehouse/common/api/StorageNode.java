@@ -1,21 +1,35 @@
 package cz.eideo.smokehouse.common.api;
 
+import cz.eideo.smokehouse.common.api.codec.Codec;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.time.Instant;
 
-abstract public class StorageNode<T> implements Node<T> {
+/**
+ * Storage nodes stores their value and uses codecs for writing and reading.
+ * @param <T>
+ */
 
-    protected T value = null;
+public class StorageNode<T> implements Node<T> {
+
+    private T value = null;
     private Instant validBefore = Instant.EPOCH;
 
-    private static final long validMillis = 3000;
+    private static final long defaultValidMillis = 3000;
 
     private Endpoint API = BlackHole.SINGULARITY;
     private int key;
 
-    protected StorageNode() { }
+    private Codec<T> codec;
 
-    public void attachAPI(Endpoint API) {
+    private final String name;
+
+    public StorageNode(Endpoint API, Codec<T> codec, String name) {
+        this.codec = codec;
         this.API = API;
+        this.name = name;
         key = API.addNode(this);
     }
 
@@ -30,16 +44,37 @@ abstract public class StorageNode<T> implements Node<T> {
     }
 
     public void setValue(T value) {
-        setValue(value, validMillis);
+        setValue(value, defaultValidMillis);
     }
 
     public synchronized void setValue(T value, long validMillis) {
         this.value = value;
         this.validBefore = Instant.now().plusMillis(validMillis);
-
         API.announceValueChanged(key);
-
         notifyAll();
     }
 
+    public Codec<T> getCodec() {
+        return codec;
+    }
+
+    @Override
+    public void dump() {
+        System.err.print(name + " = ");
+        System.err.println(value);
+    }
+
+    public void setCodec(Codec<T> codec) {
+        this.codec = codec;
+    }
+
+    @Override
+    public void writeValue(DataOutputStream stream) throws IOException {
+        codec.encode(value, stream);
+    }
+
+    @Override
+    public void readValue(DataInputStream stream) throws IOException {
+        setValue(codec.decode(stream));
+    }
 }

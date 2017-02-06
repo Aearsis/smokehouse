@@ -1,5 +1,7 @@
 package cz.eideo.smokehouse.common;
 
+import cz.eideo.smokehouse.common.api.BlackHole;
+import cz.eideo.smokehouse.common.sensor.ThermoArea;
 import cz.eideo.smokehouse.common.sensor.Thermometer;
 import cz.eideo.smokehouse.common.util.Observer;
 import org.junit.Test;
@@ -18,14 +20,14 @@ public class ThermoAreaTest {
 
     @Test
     public void testValue() throws Exception {
-        ThermoArea ta = new ThermoArea();
+        ThermoArea ta = new ThermoArea(BlackHole.SINGULARITY);
         TestObserver to = new TestObserver();
         ta.attachObserver(to);
 
-        Thermometer t = new Thermometer();
+        Thermometer t = new Thermometer(BlackHole.SINGULARITY);
         ta.addThermometer(t);
 
-        t.setValue(42);
+        t.setValue(42d);
         assertTrue(to.signalled);
     }
 

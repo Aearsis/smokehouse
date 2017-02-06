@@ -38,8 +38,7 @@ class Server {
             apiThread.setDaemon(true);
             apiThread.start();
 
-            SQLiteSessionStorage storage = new SQLiteSessionStorage(SQLiteStorage.fromFile(args.dbName));
-            storage.attachAPI(serverAPI);
+            SQLiteSessionStorage storage = new SQLiteSessionStorage(serverAPI, SQLiteStorage.fromFile(args.dbName));
 
             if (storage.getState() == Session.State.NEW) {
                 storage.setSetupClass(CubeSetup.class);
@@ -67,12 +66,18 @@ class Server {
 
         CubeRandomFeeder feeder = new CubeRandomFeeder(s);
 
-        feeder.setup();
         feeder.start();
 
-        Signal.handle(new Signal("TERM"), signal -> {
-            feeder.stop();
-        });
+        Signal.handle(new Signal("TERM"), signal -> feeder.stop());
+
+        while (true) {
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            serverAPI.dumpNodes();
+        }
     }
 }
 

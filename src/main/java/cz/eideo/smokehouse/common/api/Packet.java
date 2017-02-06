@@ -1,10 +1,9 @@
 package cz.eideo.smokehouse.common.api;
 
-import com.sun.xml.internal.bind.v2.runtime.reflect.Lister;
 
 import java.io.*;
 
-class Packet {
+class Packet implements Comparable<Packet> {
 
     /* These are not in enum because we want them to be sent as integers */
     public static final byte QUERY = 'Q';
@@ -13,39 +12,27 @@ class Packet {
     byte type;
     int key;
 
+    /* Used when writing only */
     private byte[] serialized;
 
-    public Packet(byte type) {
+    public Packet(byte type, int key) {
         this.type = type;
+        this.key = key;
     }
 
     public Packet(DataInputStream stream) throws IOException {
-        read(stream);
-    }
-
-    public Packet(byte type, int key) {
-        this(type);
-        this.key = key;
+        type = stream.readByte();
+        key = stream.readByte();
     }
 
     void write(DataOutputStream os) throws IOException {
         os.writeByte(type);
-        os.writeShort(key);
+        os.writeByte(key);
         if (type == VALUE) {
-            os.writeShort(serialized.length);
             os.write(serialized);
         }
     }
 
-    private void read(DataInputStream stream) throws IOException {
-        type = stream.readByte();
-        key = stream.readUnsignedShort();
-        if (type == VALUE) {
-            int len = stream.readUnsignedShort();
-            serialized = new byte[len];
-            stream.read(serialized);
-        }
-    }
 
     public static Packet valueFromNode(int key, Node node) throws IOException {
         Packet pkt = new Packet(VALUE, key);
@@ -58,8 +45,12 @@ class Packet {
         return pkt;
     }
 
-    public void valueToNode(Node node) throws IOException {
-        DataInputStream stream = new DataInputStream(new ByteArrayInputStream(serialized));
-        node.readValue(stream);
+    @Override
+    public int compareTo(Packet other) {
+        if (this.type != other.type)
+            return this.type - other.type;
+        if (this.key != other.key)
+            return this.key - other.key;
+        return 0;
     }
 }

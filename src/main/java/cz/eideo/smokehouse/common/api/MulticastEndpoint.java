@@ -1,11 +1,15 @@
 package cz.eideo.smokehouse.common.api;
 
+import com.sun.xml.internal.bind.v2.runtime.reflect.Lister;
+
 import java.io.*;
 import java.net.*;
 import java.util.ArrayDeque;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Common base for multicast endpoints. Implements packet queueing to reduce network traffic.
@@ -52,21 +56,15 @@ abstract public class MulticastEndpoint extends Container implements Runnable {
 
             while (stream.available() > 0) {
                 final Packet packet = new Packet(stream);
-                executorService.schedule(() -> {
-                    try {
-                        processPacket(packet);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }, 0, TimeUnit.MILLISECONDS);
+                processPacket(packet, stream);
             }
-        } catch (SocketTimeoutException ignored) {
+        } catch (SocketTimeoutException | PacketInvalidException ignored) {
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    protected abstract void processPacket(Packet packet) throws IOException;
+    protected abstract void processPacket(Packet packet, DataInputStream stream) throws IOException, PacketInvalidException;
 
     private Queue<Packet> packetQueue = new ArrayDeque<>();
     boolean scheduled = false;
@@ -90,6 +88,11 @@ abstract public class MulticastEndpoint extends Container implements Runnable {
             DataOutputStream os = new DataOutputStream(buf);
             int len = 0;
 
+            List<Packet> sorted = packetQueue.parallelStream()
+                    .sorted().distinct().collect(Collectors.toList());
+            packetQueue.clear();
+            packetQueue.addAll(sorted);
+
             try {
                 while (!packetQueue.isEmpty()) {
                     Packet head = packetQueue.element();
@@ -109,6 +112,12 @@ abstract public class MulticastEndpoint extends Container implements Runnable {
         } finally {
             if (!packetQueue.isEmpty())
                 scheduleFlush();
+        }
+    }
+
+    protected static class PacketInvalidException extends IOException {
+        public PacketInvalidException(String s) {
+            super(s);
         }
     }
 

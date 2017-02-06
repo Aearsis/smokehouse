@@ -4,6 +4,7 @@ import cz.eideo.smokehouse.common.util.ObservableObject;
 import cz.eideo.smokehouse.common.util.Observer;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -11,21 +12,30 @@ import java.util.List;
  *
  * Signals whenever a sensor signals.
  */
-public class SensorGroup extends ObservableObject implements Observer {
+public class SourceGroup<T> extends ObservableObject implements Observer, Iterable<Source<T>> {
 
-    protected List<Sensor> sensors = new ArrayList<>();
+    protected List<Source<T>> sensors = new ArrayList<>();
 
-    protected int addSensor(Sensor s) {
+    protected int addSource(Source<T> s) {
         s.attachObserver(this);
         sensors.add(s);
         return sensors.size() - 1;
     }
 
-    protected Sensor getSensor(int i) {
+    public Source<T> getSource(int i) {
         return sensors.get(i);
     }
 
     public void signal() {
         signalMonitors();
+    }
+
+    @Override
+    public Iterator<Source<T>> iterator() {
+        return sensors.iterator();
+    }
+
+    public int size() {
+        return sensors.size();
     }
 }

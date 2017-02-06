@@ -1,5 +1,7 @@
 package cz.eideo.smokehouse.common.api;
 
+import cz.eideo.smokehouse.common.api.codec.Codec;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -7,7 +9,8 @@ import java.io.IOException;
 /**
  * Node represents a value that is read and written by the API.
  *
- * Node can in principle be inserted to more API Endpoints, but this is discouraged.
+ * Node should use a Codec to encode its value,
+ * but its unspecified where to get the value.
  */
 public interface Node<T> {
 
@@ -21,4 +24,7 @@ public interface Node<T> {
      */
     void readValue(DataInputStream dataStream) throws IOException;
 
+    Codec<T> getCodec();
+
+    void dump();
 }
