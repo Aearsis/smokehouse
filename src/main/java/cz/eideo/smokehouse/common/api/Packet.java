@@ -1,7 +1,10 @@
 package cz.eideo.smokehouse.common.api;
 
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 
 class Packet implements Comparable<Packet> {
 

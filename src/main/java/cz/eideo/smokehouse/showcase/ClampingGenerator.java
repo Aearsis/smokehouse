@@ -1,7 +1,5 @@
 package cz.eideo.smokehouse.showcase;
 
-import java.util.Map;
-
 /**
  * Generator that clamps values from another generator.
  * Values are not just clamped, they are offset so that generator

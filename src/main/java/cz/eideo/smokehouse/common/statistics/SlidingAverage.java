@@ -1,7 +1,7 @@
 package cz.eideo.smokehouse.common.statistics;
 
-import cz.eideo.smokehouse.common.StorageSource;
 import cz.eideo.smokehouse.common.Source;
+import cz.eideo.smokehouse.common.StorageSource;
 import cz.eideo.smokehouse.common.api.Endpoint;
 import cz.eideo.smokehouse.common.util.Observer;
 

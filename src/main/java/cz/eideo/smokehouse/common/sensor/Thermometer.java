@@ -1,7 +1,7 @@
 package cz.eideo.smokehouse.common.sensor;
 
-import cz.eideo.smokehouse.common.StorageSource;
 import cz.eideo.smokehouse.common.Sensor;
+import cz.eideo.smokehouse.common.StorageSource;
 import cz.eideo.smokehouse.common.api.Endpoint;
 import cz.eideo.smokehouse.common.api.codec.ThermalCodec;
 import cz.eideo.smokehouse.common.statistics.SlidingAverage;

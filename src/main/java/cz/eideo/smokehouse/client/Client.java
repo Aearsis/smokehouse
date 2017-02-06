@@ -6,7 +6,6 @@ import cz.eideo.smokehouse.common.api.MulticastConsumer;
 import cz.eideo.smokehouse.common.setup.CubeSetup;
 import sun.misc.Signal;
 
-import java.io.Console;
 import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;

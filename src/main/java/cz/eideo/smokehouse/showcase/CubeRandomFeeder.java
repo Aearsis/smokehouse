@@ -3,7 +3,6 @@ package cz.eideo.smokehouse.showcase;
 import cz.eideo.smokehouse.common.sensor.Thermometer;
 import cz.eideo.smokehouse.common.setup.CubeSetup;
 
-import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;

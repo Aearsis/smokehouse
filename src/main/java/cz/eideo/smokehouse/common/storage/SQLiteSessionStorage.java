@@ -2,7 +2,6 @@ package cz.eideo.smokehouse.common.storage;
 
 import cz.eideo.smokehouse.common.Session;
 import cz.eideo.smokehouse.common.SessionStorage;
-import cz.eideo.smokehouse.common.Setup;
 import cz.eideo.smokehouse.common.api.Endpoint;
 
 import java.sql.PreparedStatement;

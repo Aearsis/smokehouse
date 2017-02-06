@@ -1,7 +1,5 @@
 package cz.eideo.smokehouse.common.api;
 
-import com.sun.xml.internal.bind.v2.runtime.reflect.Lister;
-
 import java.io.*;
 import java.net.*;
 import java.util.ArrayDeque;

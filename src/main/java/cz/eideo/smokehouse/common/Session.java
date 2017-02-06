@@ -2,7 +2,6 @@ package cz.eideo.smokehouse.common;
 
 import cz.eideo.smokehouse.common.api.BlackHole;
 import cz.eideo.smokehouse.common.api.Endpoint;
-import cz.eideo.smokehouse.common.setup.CubeSetup;
 
 /**
  * Sessions represent one smoking. They have fixed setup, which is saved into the storage and loaded.
