@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="smokehouse" default="all">
+
+    <path id="library.sqlite-jdbc-3.15.1.classpath">
+    </path>
+
+    <dirname property="smokehouse.basedir" file="${ant.file}"/>
+    <property name="smokehouse.output.dir" value="${smokehouse.basedir}/build/"/>
+
+    <path id="smokehouse.classpath">
+        <fileset dir="lib" includes="*.jar"/>
+    </path>
+
+    <path id="smokehouse.module.sourcepath">
+        <dirset dir="${smokehouse.basedir}">
+            <include name="src"/>
+        </dirset>
+    </path>
+
+    <target name="compile" description="Compile Smokehouse server">
+        <mkdir dir="${smokehouse.output.dir}"/>
+        <javac destdir="${smokehouse.output.dir}" fork="true" includeantruntime="false">
+            <compilerarg line="-XDignore.symbol.file"/>
+            <src refid="smokehouse.module.sourcepath"/>
+            <classpath refid="smokehouse.classpath"/>
+        </javac>
+    </target>
+
+    <target name="clean" description="cleanup">
+        <delete dir="${smokehouse.output.dir}"/>
+    </target>
+
+    <target name="build" depends="clean, compile" description="build all modules"/>
+
+    <target name="all" depends="build" description="build all"/>
+</project>
