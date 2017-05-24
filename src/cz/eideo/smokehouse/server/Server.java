@@ -2,17 +2,19 @@ package cz.eideo.smokehouse.server;
 
 import cz.eideo.smokehouse.common.Session;
 import cz.eideo.smokehouse.common.api.MulticastProvider;
+import cz.eideo.smokehouse.common.feeder.LogFeeder;
 import cz.eideo.smokehouse.common.sensor.SQLiteStoredSensorFactory;
 import cz.eideo.smokehouse.common.setup.CubeSetup;
 import cz.eideo.smokehouse.common.storage.SQLiteSessionStorage;
 import cz.eideo.smokehouse.common.storage.SQLiteStorage;
 import cz.eideo.smokehouse.common.util.Posix;
-import cz.eideo.smokehouse.showcase.CubeRandomFeeder;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Server instance. It initializes the environment for running server.
@@ -26,22 +28,21 @@ class Server {
 
     private final Session session;
     private final SQLiteStorage db;
-
-    private final ServerOptions args;
+    private final ServerOptions options;
     private MulticastProvider serverAPI;
 
-    Server(ServerOptions args) {
-        this.args = args;
+    Server(ServerOptions options) {
         try {
+            this.options = options;
             ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-            serverAPI = new MulticastProvider(executorService, args.groupAddress, args.port);
+            serverAPI = new MulticastProvider(executorService, options.groupAddress, options.port);
 
             Thread apiThread = new Thread(serverAPI);
             apiThread.setName("Server API");
             apiThread.setDaemon(true);
             apiThread.start();
 
-            db = SQLiteStorage.fromFile(args.dbName);
+            db = SQLiteStorage.fromFile(options.dbName);
             SQLiteSessionStorage storage = new SQLiteSessionStorage(serverAPI, db.getNamespace("session"));
 
             if (storage.getState() == Session.State.NEW) {
@@ -59,7 +60,7 @@ class Server {
         }
     }
 
-    void run() {
+    void run() throws Exception {
         session.loadSetup();
         CubeSetup s = (CubeSetup) session.getSetup();
 
@@ -69,12 +70,8 @@ class Server {
         s.setSensorFactory(new SQLiteStoredSensorFactory(session.getAPI(), db));
         s.setupSensors();
 
-        CubeRandomFeeder feeder = new CubeRandomFeeder(s);
-
-        feeder.start();
-
-        Posix.waitForSigterm(feeder::stop);
-
+        LogFeeder logFeeder = new LogFeeder(this.options.logStream, s);
+        logFeeder.run();
     }
 }
 

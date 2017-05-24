@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.util.Scanner;
 
 /**
- * Parses input stream. Fixed number of sensors N. Reads double value in cyclic order.
+ * Parses input stream. Fixed number of thermometers N. Reads double value in cyclic order.
  */
 public class TextFeeder {
 

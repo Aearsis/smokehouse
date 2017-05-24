@@ -21,7 +21,7 @@ import cz.eideo.smokehouse.common.sensor.Thermometer;
  * Every column has a ThermoArea, numbered as the lower sensor.
  * Planes has thermoareas (0 bottom, 1 up) and the whole cube has an area.
  */
-public class CubeSetup extends Setup {
+public class CubeSetup extends Setup implements ThermometerArray {
 
     private Thermometer[] thermometers;
     private ThermoArea[] thermoAreas;
@@ -57,6 +57,7 @@ public class CubeSetup extends Setup {
             createThermometer(i);
     }
 
+    @Override
     public Thermometer getThermometer(int i) {
         return thermometers[i];
     }

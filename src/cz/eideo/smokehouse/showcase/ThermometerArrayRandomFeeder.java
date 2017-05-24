@@ -1,23 +1,23 @@
 package cz.eideo.smokehouse.showcase;
 
 import cz.eideo.smokehouse.common.sensor.Thermometer;
-import cz.eideo.smokehouse.common.setup.CubeSetup;
+import cz.eideo.smokehouse.common.setup.ThermometerArray;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class CubeRandomFeeder {
+public class ThermometerArrayRandomFeeder {
 
     private static final long DELAY = 1000;
-    private final CubeSetup setup;
+    private final ThermometerArray setup;
     private final RealNumberGenerator[] feeders = new RealNumberGenerator[18];
 
     private final RealNumberGenerator shared;
     private final RealNumberGenerator initial;
 
 
-    public CubeRandomFeeder(CubeSetup setup) {
+    public ThermometerArrayRandomFeeder(ThermometerArray setup) {
         this.setup = setup;
         shared = createSharedGenerator();
         initial = new GaussianGenerator(5, () -> 80);
