@@ -17,10 +17,9 @@
         </dirset>
     </path>
 
-    <target name="compile" description="Compile Smokehouse server">
+    <target name="compile" description="Compile Smokehouse sources">
         <mkdir dir="${smokehouse.output.dir}"/>
         <javac destdir="${smokehouse.output.dir}" fork="true" includeantruntime="false">
-            <compilerarg line="-XDignore.symbol.file"/>
             <src refid="smokehouse.module.sourcepath"/>
             <classpath refid="smokehouse.classpath"/>
         </javac>
@@ -32,5 +31,30 @@
 
     <target name="build" depends="clean, compile" description="build all modules"/>
 
-    <target name="all" depends="build" description="build all"/>
+    <target name="package-server" depends="build">
+        <jar destfile="smokehouse-server.jar" basedir="${smokehouse.output.dir}">
+            <zipfileset src="lib/sqlite-jdbc-3.15.1.jar"/>
+            <zipfileset src="lib/yaclpplib-1.0.jar"/>
+            <include name="cz/eideo/smokehouse/common/**" />
+            <include name="cz/eideo/smokehouse/showcase/**" />
+            <include name="cz/eideo/smokehouse/server/**" />
+            <manifest>
+                <attribute name="Main-Class" value="cz.eideo.smokehouse.server.Bootstrap"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="package-client" depends="build">
+        <jar destfile="smokehouse-client.jar" basedir="${smokehouse.output.dir}">
+            <zipfileset src="lib/sqlite-jdbc-3.15.1.jar"/>
+            <zipfileset src="lib/yaclpplib-1.0.jar"/>
+            <include name="cz/eideo/smokehouse/common/**" />
+            <include name="cz/eideo/smokehouse/client/**" />
+            <manifest>
+                <attribute name="Main-Class" value="cz.eideo.smokehouse.client.Bootstrap"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="all" depends="package-server, package-client" description="build all"/>
 </project>

@@ -27,10 +27,10 @@ class Server {
     private final Session session;
     private final SQLiteStorage db;
 
-    private final ServerArguments args;
+    private final ServerOptions args;
     private MulticastProvider serverAPI;
 
-    Server(ServerArguments args) {
+    Server(ServerOptions args) {
         this.args = args;
         try {
             ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();

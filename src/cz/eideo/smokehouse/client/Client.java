@@ -25,7 +25,7 @@ class Client {
     private final Session session;
     private final MulticastConsumer clientAPI;
 
-    Client(ClientArguments args) {
+    Client(ClientOptions args) {
         try {
             ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
             clientAPI = new MulticastConsumer(executorService, args.groupAddress, args.port);

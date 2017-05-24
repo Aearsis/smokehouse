@@ -37,7 +37,7 @@ public class Thermometer extends StoredSource<Double> implements Sensor<Double> 
         return storage.getValueInTime(time);
     }
 
-    public void setStorage(SensorStorage storage) {
+    public void setStorage(SensorStorage<Double> storage) {
         this.storage = storage;
     }
 }
