@@ -5,33 +5,43 @@ import cz.eideo.smokehouse.common.sensor.SensorFactory;
 import cz.eideo.smokehouse.common.sensor.ThermoArea;
 import cz.eideo.smokehouse.common.sensor.Thermometer;
 
+import java.util.HashMap;
+
 /**
  * This setup contains 18 thermometers in two layers.
  * Each layer is in form of 3x3 even grid of thermometers.
  * Their numbers are fixed this way:
- * <p>
- * 11   14   17
- * 10   13   16
- * 9   12   15
- * <p>
- * 2    5    8
- * 1    4    7
- * 0    3    6
- * <p>
- * Every column has a ThermoArea, numbered as the lower sensor.
- * Planes has thermoareas (0 bottom, 1 up) and the whole cube has an area.
+ * <pre>
+ *      0   1   2
+ *      3   4   5
+ *      6   7   8
+ *
+ *      9   10  11
+ *      12  13  14
+ *      15  16  17
+ * </pre>
+ * Every column has a ThermoArea, numbered as the upper sensor.
+ * Planes has thermoareas (0 up, 1 bottom) and the whole cube has an area.
  */
 public class CubeSetup extends Setup implements ThermometerArray {
 
     private Thermometer[] thermometers;
     private ThermoArea[] thermoAreas;
 
+    final static HashMap<Integer, String> columnNames = new HashMap<Integer, String>() {{
+        put(0, "back left");    put(1, "back middle");  put(2, "back right");
+        put(3, "middle left");  put(4, "middle");       put(5, "middle right");
+        put(6, "front left");   put(7, "front middle"); put(8, "front right");
+    }};
+
     private void createThermometer(int i) {
         try {
-            Thermometer t = sensorFactory.createThermometer(Integer.toHexString(i));
-            thermometers[i] = t;
+            StringBuilder nameBuilder = new StringBuilder();
+            nameBuilder.append(i >= 9 ? "bottom" : "top").append(" ");
+            nameBuilder.append(columnNames.get(i % 9));
+            Thermometer t = thermometers[i] = sensorFactory.createThermometer(nameBuilder.toString());
             getColumnArea(i % 9).addThermometer(t);
-            getPlaneArea(i >= 9 ? 1 : 0).addThermometer(t);
+            getPlaneArea(i / 9).addThermometer(t);
             getCubeArea().addThermometer(t);
         } catch (SensorFactory.FactoryException e) {
             throw new RuntimeException("Cannot create Thermometer.", e);

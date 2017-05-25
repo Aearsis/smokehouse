@@ -4,7 +4,7 @@ import cz.cuni.mff.yaclpplib.ArgumentParser;
 import cz.cuni.mff.yaclpplib.ArgumentParserFactory;
 
 /**
- * Entry point for the client application. Only parses parameters and runs a server instance.
+ * Entry point for the client application. Only parses parameters and runs a client instance.
  */
 class Bootstrap {
 

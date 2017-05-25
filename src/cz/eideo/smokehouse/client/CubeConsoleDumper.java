@@ -28,8 +28,8 @@ class CubeConsoleDumper {
         this.setup = setup;
 
         cubeArea = setup.getCubeArea();
-        bottomPlane = setup.getPlaneArea(0);
-        topPlane = setup.getPlaneArea(1);
+        topPlane = setup.getPlaneArea(0);
+        bottomPlane = setup.getPlaneArea(1);
     }
 
     /**
@@ -50,15 +50,15 @@ class CubeConsoleDumper {
         toolkit.nextLine();
         toolkit.nextLine();
 
-        printLine(11, 3);
-        printLine(10, 2);
-        printLine(9, 1);
+        printLine(0, 3);
+        printLine(3, 2);
+        printLine(6, 1);
         toolkit.nextLine();
         toolkit.nextLine();
 
-        printLine(2, 3);
-        printLine(1, 2);
-        printLine(0, 1);
+        printLine(9, 3);
+        printLine(12, 2);
+        printLine(15, 1);
         toolkit.goHome();
         toolkit.flush();
     }
@@ -88,7 +88,7 @@ class CubeConsoleDumper {
      */
     private void printLine(int first, int z) {
         toolkit.setPrefix(space(4 * z));
-        for (int i = first; i < first + 9; i += 3) {
+        for (int i = first; i < first + 3; i++) {
             Thermometer t = setup.getThermometer(i);
             SlidingAverage<Double> a = t.slidingAverage;
             autoDiffColor(a.waitForValue(), t.waitForValue());
@@ -96,7 +96,7 @@ class CubeConsoleDumper {
         }
         toolkit.nextLine();
 
-        for (int i = first; i < first + 9; i += 3) {
+        for (int i = first; i < first + 3; i++) {
             Thermometer t = setup.getThermometer(i);
             SlidingAverage<Double> a = t.slidingAverage;
             toolkit.setColor(ConsoleToolkit.Color.YELLOW);
