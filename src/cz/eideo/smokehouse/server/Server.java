@@ -1,20 +1,19 @@
 package cz.eideo.smokehouse.server;
 
 import cz.eideo.smokehouse.common.Session;
-import cz.eideo.smokehouse.common.api.MulticastProvider;
+import cz.eideo.smokehouse.common.api.LocalNode;
+import cz.eideo.smokehouse.common.api.MulticastEndpoint;
+import cz.eideo.smokehouse.common.api.NodeFactory;
 import cz.eideo.smokehouse.common.feeder.LogFeeder;
 import cz.eideo.smokehouse.common.sensor.SQLiteStoredSensorFactory;
 import cz.eideo.smokehouse.common.setup.CubeSetup;
 import cz.eideo.smokehouse.common.storage.SQLiteSessionStorage;
 import cz.eideo.smokehouse.common.storage.SQLiteStorage;
-import cz.eideo.smokehouse.common.util.Posix;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Server instance. It initializes the environment for running server.
@@ -29,13 +28,14 @@ class Server {
     private final Session session;
     private final SQLiteStorage db;
     private final ServerOptions options;
-    private MulticastProvider serverAPI;
+    private final NodeFactory nodeFactory;
+    private MulticastEndpoint serverAPI;
 
     Server(ServerOptions options) {
         try {
             this.options = options;
             ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-            serverAPI = new MulticastProvider(executorService, options.groupAddress, options.port);
+            serverAPI = new MulticastEndpoint(executorService, options.multicastEndpointOptions);
 
             Thread apiThread = new Thread(serverAPI);
             apiThread.setName("Server API");
@@ -43,7 +43,8 @@ class Server {
             apiThread.start();
 
             db = SQLiteStorage.fromFile(options.dbName);
-            SQLiteSessionStorage storage = new SQLiteSessionStorage(serverAPI, db.getNamespace("session"));
+            nodeFactory = LocalNode.createNodeFactory(serverAPI);
+            SQLiteSessionStorage storage = new SQLiteSessionStorage(nodeFactory, db.getNamespace("session"));
 
             if (storage.getState() == Session.State.NEW) {
                 storage.setSetupClass(CubeSetup.class);
@@ -51,8 +52,7 @@ class Server {
                 storage.flush();
             }
 
-            session = new Session(storage);
-            session.setAPI(serverAPI);
+            session = new Session(storage, serverAPI);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException("Nenalezena odpovídající konfigurace udírny.", e);
         } catch (IOException | SQLException e) {
@@ -67,7 +67,7 @@ class Server {
         if (s == null)
             throw new RuntimeException("This server can only work with CubeSetup.");
 
-        s.setSensorFactory(new SQLiteStoredSensorFactory(session.getAPI(), db));
+        s.setSensorFactory(new SQLiteStoredSensorFactory(nodeFactory, db));
         s.setupSensors();
 
         LogFeeder logFeeder = new LogFeeder(this.options.logStream, s);

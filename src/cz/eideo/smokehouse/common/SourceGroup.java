@@ -12,17 +12,17 @@ import java.util.List;
  * <p>
  * Signals whenever a sensor signals.
  */
-public class SourceGroup<T> extends ObservableObject implements Observer, Iterable<Source<T>> {
+public class SourceGroup<T extends Source<?>> extends ObservableObject implements Observer, Iterable<T> {
 
-    private final List<Source<T>> sensors = new ArrayList<>();
+    private final List<T> sensors = new ArrayList<>();
 
-    protected int addSource(Source<T> s) {
+    protected int addSource(T s) {
         s.attachObserver(this);
         sensors.add(s);
         return sensors.size() - 1;
     }
 
-    public Source<T> getSource(int i) {
+    public T getSource(int i) {
         return sensors.get(i);
     }
 
@@ -31,7 +31,7 @@ public class SourceGroup<T> extends ObservableObject implements Observer, Iterab
     }
 
     @Override
-    public Iterator<Source<T>> iterator() {
+    public Iterator<T> iterator() {
         return sensors.iterator();
     }
 

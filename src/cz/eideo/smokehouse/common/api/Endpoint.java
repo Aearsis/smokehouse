@@ -1,35 +1,42 @@
 package cz.eideo.smokehouse.common.api;
 
+import java.io.IOException;
+
 /**
- * One side of the API. Implementations should either fetch values from the other side, or provide them.
+ * One endpoint of the API.
+ *
+ * API is composed of "nodes". The API implements a remotely-accessible hashtable,
+ * which operates asynchronously.
+ *
+ * The values can be queried and announced.
  */
 public interface Endpoint {
 
     /**
      * Instructs the API to fetch value from node.
      *
-     * @param key the API key
-     * @return true if actually announced query (or just plain call)
+     * @param node the API node
      */
-    default boolean announceQueryValue(int key) {
-        return false;
-    }
+    void sendQuery(Node node);
 
     /**
      * Instructs the API to send value over.
      *
-     * @param key the API key
-     * @return true if actually transmitted the value
+     * @param node the API node
      */
-    default boolean announceValueChanged(int key) {
-        return false;
-    }
+    void sendValue(Node node) throws IOException;
 
     /**
-     * Attach new node. Should also assign a key to the node.
+     * Attach new node.
      *
      * @param n
      */
-    int addNode(Node n);
+    void addNode(Node<?> n);
+
+    /**
+     * Assign new key.
+     * @return unique key
+     */
+    int assignKey();
 
 }

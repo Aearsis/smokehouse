@@ -7,7 +7,11 @@ import java.io.IOException;
 /**
  * Effectively encodes thermal-like decimal in four bytes.
  */
-public class ThermalCodec implements Codec<Double> {
+public enum ThermalCodec implements Codec<Double> {
+
+    INSTANCE;
+
+
     @Override
     public void encode(Double value, DataOutputStream stream) throws IOException {
         if (value <= 0)

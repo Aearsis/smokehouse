@@ -2,7 +2,9 @@ package cz.eideo.smokehouse.common.sensor;
 
 import cz.eideo.smokehouse.common.SourceGroup;
 import cz.eideo.smokehouse.common.api.Endpoint;
+import cz.eideo.smokehouse.common.api.NodeFactory;
 import cz.eideo.smokehouse.common.api.codec.ThermalCodec;
+import cz.eideo.smokehouse.common.setup.ThermometerArray;
 import cz.eideo.smokehouse.common.statistics.GroupAverage;
 import cz.eideo.smokehouse.common.statistics.SlidingAverage;
 import cz.eideo.smokehouse.common.util.Observer;
@@ -10,14 +12,15 @@ import cz.eideo.smokehouse.common.util.Observer;
 /**
  * Some Area of Thermometers.
  */
-public class ThermoArea extends SourceGroup<Double> implements Observer {
+public class ThermoArea extends SourceGroup<Thermometer> implements Observer, ThermometerArray {
 
-    public final GroupAverage average;
-    public final SlidingAverage slidingAverage;
+    public final GroupAverage<Double> average;
+    public final SlidingAverage<Double> slidingAverage;
 
-    public ThermoArea(Endpoint API) {
-        average = new GroupAverage(API, new ThermalCodec(), this);
-        slidingAverage = new SlidingAverage(average, API, 16);
+    public ThermoArea(NodeFactory nodeFactory) {
+        NodeFactory namespacedFactory = nodeFactory.getNamespace("thermo area");
+        average = new GroupAverage<>(this, namespacedFactory, ThermalCodec.INSTANCE);
+        slidingAverage = new SlidingAverage<>(average, namespacedFactory, ThermalCodec.INSTANCE, 16);
     }
 
     public int addThermometer(Thermometer t) {

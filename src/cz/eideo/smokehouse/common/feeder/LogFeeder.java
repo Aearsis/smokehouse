@@ -86,7 +86,8 @@ public class LogFeeder implements Runnable {
 
                 final Instant at = started.plus(Duration.between(offset, dataRow.time));
                 final Duration sleepFor = Duration.between(Instant.now(), at);
-                Thread.sleep(sleepFor.toMillis());
+                //Thread.sleep(sleepFor.toMillis());
+                Thread.sleep(100);
                 emitValues(dataRow);
                 getLogger().log(Level.INFO, "Fed values from " + outputFormatter.format(dataRow.time));
             }

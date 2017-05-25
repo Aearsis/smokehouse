@@ -1,6 +1,5 @@
 package cz.eideo.smokehouse.common;
 
-import cz.eideo.smokehouse.common.api.BlackHole;
 import cz.eideo.smokehouse.common.api.Endpoint;
 
 /**
@@ -15,10 +14,11 @@ public class Session {
     private final SessionStorage storage;
     private Setup setup;
 
-    private Endpoint API = BlackHole.SINGULARITY;
+    private final Endpoint endpoint;
 
-    public Session(SessionStorage storage) {
+    public Session(SessionStorage storage, Endpoint api) {
         this.storage = storage;
+        this.endpoint = api;
     }
 
     public void setSetup(Setup s) {
@@ -47,11 +47,8 @@ public class Session {
         return storage;
     }
 
-    public Endpoint getAPI() {
-        return API;
+    public Endpoint getEndpoint() {
+        return endpoint;
     }
 
-    public void setAPI(Endpoint API) {
-        this.API = API;
-    }
 }

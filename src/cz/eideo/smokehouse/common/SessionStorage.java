@@ -1,35 +1,22 @@
 package cz.eideo.smokehouse.common;
 
 import cz.eideo.smokehouse.common.Session.State;
-import cz.eideo.smokehouse.common.api.Endpoint;
-import cz.eideo.smokehouse.common.api.StorageNode;
+import cz.eideo.smokehouse.common.api.Node;
+import cz.eideo.smokehouse.common.api.NodeFactory;
 import cz.eideo.smokehouse.common.api.codec.ClassCodec;
-import cz.eideo.smokehouse.common.api.codec.Codec;
-
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import cz.eideo.smokehouse.common.api.codec.EnumCodec;
 
 /**
  * Storage for sessions, by default empty, relying on API provided values.
  */
 public class SessionStorage {
 
-    private final StorageNode<Class> setupClass;
+    private final Node<Class> setupClass;
+    private final Node<State> state;
 
-    public SessionStorage(Endpoint API) {
-        setupClass = new StorageNode<>(API, new ClassCodec(), "setup class");
-        state = new StorageNode<>(API, new Codec<State>() {
-            @Override
-            public void encode(State value, DataOutputStream stream) throws IOException {
-                stream.writeUTF(value.toString());
-            }
-
-            @Override
-            public State decode(DataInputStream stream) throws IOException {
-                return State.valueOf(stream.readUTF());
-            }
-        }, "session state");
+    public SessionStorage(NodeFactory nodeFactory) {
+        setupClass = nodeFactory.create(ClassCodec.INSTANCE, "setup class");
+        state = nodeFactory.create(new EnumCodec<>(State.class), "session state");
     }
 
     public void setSetupClass(Class setupClass) {
@@ -37,13 +24,11 @@ public class SessionStorage {
     }
 
     public Class getSetupClass() {
-        return setupClass.getValue();
+        return setupClass.waitForValue();
     }
 
-    private final StorageNode<State> state;
-
     public State getState() {
-        return state.getValue();
+        return state.waitForValue();
     }
 
     public void setState(State state) {

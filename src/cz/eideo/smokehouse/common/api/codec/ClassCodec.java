@@ -7,7 +7,10 @@ import java.io.IOException;
 /**
  * Codec for class names.
  */
-public class ClassCodec implements Codec<Class> {
+public enum ClassCodec implements Codec<Class> {
+
+    INSTANCE;
+
     @Override
     public void encode(Class value, DataOutputStream stream) throws IOException {
         stream.writeUTF(value.getCanonicalName());

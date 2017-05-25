@@ -2,6 +2,7 @@ package cz.eideo.smokehouse.common.sensor;
 
 import cz.eideo.smokehouse.common.Sensor;
 import cz.eideo.smokehouse.common.api.Endpoint;
+import cz.eideo.smokehouse.common.api.NodeFactory;
 import cz.eideo.smokehouse.common.storage.SensorStorage;
 import cz.eideo.smokehouse.common.storage.SQLiteRealNumberSensorStorage;
 import cz.eideo.smokehouse.common.storage.SQLiteStorage;
@@ -12,15 +13,15 @@ public class SQLiteStoredSensorFactory extends DefaultSensorFactory {
 
     private final SQLiteStorage storage;
 
-    public SQLiteStoredSensorFactory(Endpoint api, SQLiteStorage sqLiteStorage) {
-        super(api);
+    public SQLiteStoredSensorFactory(NodeFactory factory, SQLiteStorage sqLiteStorage) {
+        super(factory);
         this.storage = sqLiteStorage;
     }
 
     @Override
     public Thermometer createThermometer(String name) throws FactoryException {
         Thermometer t = super.createThermometer(name);
-        SensorStorage sensorStorage = createRealStorage(t, storage.getNamespace("thermometer").getNamespace(name));
+        SensorStorage<Double> sensorStorage = createRealStorage(t, storage.getNamespace("thermometer").getNamespace(name));
         t.setStorage(sensorStorage);
         return t;
     }

@@ -12,27 +12,22 @@ import java.util.stream.Collectors;
 /**
  * Common base for multicast endpoints. Implements packet queueing to reduce network traffic.
  */
-abstract class MulticastEndpoint extends Container implements Runnable {
-
-    private final static long aggregateDelay = 200;
-    private final static int maxPacketSize = 1500;
+public class MulticastEndpoint extends Container implements Runnable {
 
     private final ScheduledExecutorService executorService;
 
     private final MulticastSocket sock;
-    private final InetAddress group;
-    private final int port;
+    private final MulticastEndpointOptions options;
 
-    MulticastEndpoint(ScheduledExecutorService executorService, InetAddress group, int port) throws IOException {
+    public MulticastEndpoint(ScheduledExecutorService executorService, MulticastEndpointOptions options) throws IOException {
         this.executorService = executorService;
-        this.group = group;
-        this.port = port;
+        this.options = options;
 
-        sock = new MulticastSocket(port);
+        sock = new MulticastSocket(options.port);
         //sock.setNetworkInterface(NetworkInterface.getByName("enp0s25"));
         sock.setLoopbackMode(false);
         sock.setTimeToLive(255);
-        sock.joinGroup(group);
+        sock.joinGroup(options.groupAddress);
         sock.setSoTimeout(1000);
     }
 
@@ -44,7 +39,7 @@ abstract class MulticastEndpoint extends Container implements Runnable {
 
     private void receivePacket() {
         try {
-            byte[] buf = new byte[maxPacketSize];
+            byte[] buf = new byte[options.maxPacketSize];
             DatagramPacket pkt = new DatagramPacket(buf, buf.length);
             sock.receive(pkt);
 
@@ -52,15 +47,30 @@ abstract class MulticastEndpoint extends Container implements Runnable {
 
             while (stream.available() > 0) {
                 final Packet packet = new Packet(stream);
-                processPacket(packet, stream);
+                if (packet.key >= nodes.size())
+                    /* The node tree is built while the API is running - we need to know how to build it.
+                     * To make it work, just skip nodes we don't have yet.
+                     */
+                    continue;
+                Node<?> node = nodes.get(packet.key);
+                switch (packet.type) {
+                    case Packet.QUERY:
+                        if (node.isMaster())
+                            sendValue(node);
+                        break;
+                    case Packet.VALUE:
+                        if (nodes.size() <= packet.key)
+                            throw new PacketInvalidException("Received packet for unknown node.");
+
+                        node.readValueFrom(stream);
+                        break;
+                }
             }
         } catch (SocketTimeoutException | PacketInvalidException ignored) {
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
-    protected abstract void processPacket(Packet packet, DataInputStream stream) throws IOException;
 
     private final Queue<Packet> packetQueue = new ArrayDeque<>();
     private boolean scheduled = false;
@@ -72,7 +82,7 @@ abstract class MulticastEndpoint extends Container implements Runnable {
 
     private void scheduleFlush() {
         if (!scheduled) {
-            executorService.schedule(this::flushQueue, aggregateDelay, TimeUnit.MILLISECONDS);
+            executorService.schedule(this::flushQueue, options.aggregateDelay, TimeUnit.MILLISECONDS);
             scheduled = true;
         }
     }
@@ -80,7 +90,7 @@ abstract class MulticastEndpoint extends Container implements Runnable {
     private synchronized void flushQueue() {
         scheduled = false;
         try {
-            ByteArrayOutputStream buf = new ByteArrayOutputStream(maxPacketSize);
+            ByteArrayOutputStream buf = new ByteArrayOutputStream(options.maxPacketSize);
             DataOutputStream os = new DataOutputStream(buf);
             int len = 0;
 
@@ -93,7 +103,7 @@ abstract class MulticastEndpoint extends Container implements Runnable {
                 while (!packetQueue.isEmpty()) {
                     Packet head = packetQueue.element();
                     head.write(os);
-                    if (os.size() > maxPacketSize)
+                    if (os.size() > options.maxPacketSize)
                         break;
 
                     len = os.size();
@@ -102,7 +112,7 @@ abstract class MulticastEndpoint extends Container implements Runnable {
             } catch (IOException ignored) {
             }
 
-            DatagramPacket pkt = new DatagramPacket(buf.toByteArray(), len, group, port);
+            DatagramPacket pkt = new DatagramPacket(buf.toByteArray(), len, options.groupAddress, options.port);
             sock.send(pkt);
         } catch (IOException e) {
             e.printStackTrace();
@@ -110,6 +120,18 @@ abstract class MulticastEndpoint extends Container implements Runnable {
             if (!packetQueue.isEmpty())
                 scheduleFlush();
         }
+    }
+
+    @Override
+    public void sendQuery(Node node) {
+        assert node.getEndpoint() == this;
+        transmit(new Packet(Packet.QUERY, node.getApiKey()));
+    }
+
+    @Override
+    public void sendValue(Node node) throws IOException {
+        assert node.getEndpoint() == this;
+        transmit(Packet.valueFromNode(node.getApiKey(), node));
     }
 
     static class PacketInvalidException extends IOException {

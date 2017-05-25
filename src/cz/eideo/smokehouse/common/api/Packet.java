@@ -9,8 +9,8 @@ import java.io.IOException;
 class Packet implements Comparable<Packet> {
 
     /* These are not in enum because we want them to be sent as integers */
-    public static final byte QUERY = 'Q';
-    public static final byte VALUE = 'V';
+    static final byte QUERY = 'Q';
+    static final byte VALUE = 'V';
 
     byte type;
     int key;
@@ -18,12 +18,12 @@ class Packet implements Comparable<Packet> {
     /* Used when writing only */
     private byte[] serialized;
 
-    public Packet(byte type, int key) {
+    Packet(byte type, int key) {
         this.type = type;
         this.key = key;
     }
 
-    public Packet(DataInputStream stream) throws IOException {
+    Packet(DataInputStream stream) throws IOException {
         type = stream.readByte();
         key = stream.readByte();
     }
@@ -37,7 +37,7 @@ class Packet implements Comparable<Packet> {
     }
 
 
-    public static Packet valueFromNode(int key, Node node) throws IOException {
+    static Packet valueFromNode(int key, Node node) throws IOException {
         Packet pkt = new Packet(VALUE, key);
 
         ByteArrayOutputStream buf = new ByteArrayOutputStream(256);

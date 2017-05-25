@@ -2,7 +2,9 @@ package cz.eideo.smokehouse.client;
 
 import cz.eideo.smokehouse.common.Session;
 import cz.eideo.smokehouse.common.SessionStorage;
-import cz.eideo.smokehouse.common.api.MulticastConsumer;
+import cz.eideo.smokehouse.common.api.MulticastEndpoint;
+import cz.eideo.smokehouse.common.api.NodeFactory;
+import cz.eideo.smokehouse.common.api.RemoteNode;
 import cz.eideo.smokehouse.common.sensor.DefaultSensorFactory;
 import cz.eideo.smokehouse.common.setup.CubeSetup;
 import cz.eideo.smokehouse.common.util.Posix;
@@ -23,22 +25,23 @@ import java.util.concurrent.TimeUnit;
 class Client {
 
     private final Session session;
-    private final MulticastConsumer clientAPI;
+    private final MulticastEndpoint clientAPI;
+    private final NodeFactory nodeFactory;
 
-    Client(ClientOptions args) {
+    Client(ClientOptions options) {
         try {
             ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-            clientAPI = new MulticastConsumer(executorService, args.groupAddress, args.port);
+            clientAPI = new MulticastEndpoint(executorService, options.multicastEndpointOptions);
 
             Thread apiThread = new Thread(clientAPI);
             apiThread.setName("Client API");
             apiThread.setDaemon(true);
             apiThread.start();
 
-            SessionStorage storage = new SessionStorage(clientAPI);
+            nodeFactory = RemoteNode.createNodeFactory(clientAPI);
+            SessionStorage storage = new SessionStorage(nodeFactory);
 
-            session = new Session(storage);
-            session.setAPI(clientAPI);
+            session = new Session(storage, clientAPI);
         } catch (IOException e) {
             throw new RuntimeException("Nezdařila se inicializace klienta: " + e.getMessage());
         }
@@ -50,7 +53,7 @@ class Client {
         if (s == null)
             throw new RuntimeException("Pro tento setup není klient připraven.");
 
-        s.setSensorFactory(new DefaultSensorFactory(clientAPI));
+        s.setSensorFactory(new DefaultSensorFactory(nodeFactory));
         s.setupSensors();
 
         CubeConsoleDumper dumper = new CubeConsoleDumper(s);

@@ -38,7 +38,6 @@ class CubeConsoleDumper {
     void dump() {
         toolkit.goHome();
 
-
         toolkit.printf("          Top: ");
         areaTemperatures(topPlane);
         toolkit.nextLine();
@@ -60,8 +59,8 @@ class CubeConsoleDumper {
         printLine(2, 3);
         printLine(1, 2);
         printLine(0, 1);
+        toolkit.goHome();
         toolkit.flush();
-
     }
 
     /**
@@ -70,13 +69,13 @@ class CubeConsoleDumper {
      * @param area the area to dump
      */
     private void areaTemperatures(ThermoArea area) {
-        autoDiffColor(area.slidingAverage.getValue(), area.average.getValue());
-        toolkit.printf("%5.1f", area.average.getValue());
+        autoDiffColor(area.slidingAverage.waitForValue(), area.average.waitForValue());
+        toolkit.printf("%5.1f", area.average.waitForValue());
         toolkit.resetColor();
         toolkit.printf(", ");
         toolkit.setColor(ConsoleToolkit.Color.DEFAULT);
-        autoColor(area.slidingAverage.getValue());
-        toolkit.printf("(%5.1f)", area.slidingAverage.getValue());
+        autoColor(area.slidingAverage.waitForValue());
+        toolkit.printf("(%5.1f)", area.slidingAverage.waitForValue());
         toolkit.resetColor();
     }
 
@@ -91,18 +90,18 @@ class CubeConsoleDumper {
         toolkit.setPrefix(space(4 * z));
         for (int i = first; i < first + 9; i += 3) {
             Thermometer t = setup.getThermometer(i);
-            SlidingAverage a = t.slidingAverage;
-            autoDiffColor(a.getValue(), t.getValue());
-            toolkit.printf(thermo_format, t.getValue());
+            SlidingAverage<Double> a = t.slidingAverage;
+            autoDiffColor(a.waitForValue(), t.waitForValue());
+            toolkit.printf(thermo_format, t.waitForValue());
         }
         toolkit.nextLine();
 
         for (int i = first; i < first + 9; i += 3) {
             Thermometer t = setup.getThermometer(i);
-            SlidingAverage a = t.slidingAverage;
+            SlidingAverage<Double> a = t.slidingAverage;
             toolkit.setColor(ConsoleToolkit.Color.YELLOW);
-            autoColor(a.getValue());
-            toolkit.printf(avg_format, a.getValue());
+            autoColor(a.waitForValue());
+            toolkit.printf(avg_format, a.waitForValue());
         }
         toolkit.nextLine();
 

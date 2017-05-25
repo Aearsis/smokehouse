@@ -2,18 +2,18 @@ package cz.eideo.smokehouse.common.statistics;
 
 import cz.eideo.smokehouse.common.Source;
 import cz.eideo.smokehouse.common.SourceGroup;
-import cz.eideo.smokehouse.common.StoredSource;
-import cz.eideo.smokehouse.common.api.Endpoint;
+import cz.eideo.smokehouse.common.NodeSource;
+import cz.eideo.smokehouse.common.api.NodeFactory;
 import cz.eideo.smokehouse.common.api.codec.Codec;
 import cz.eideo.smokehouse.common.util.Observer;
 
 
-public class GroupAverage extends StoredSource<Double> implements Source<Double>, Observer {
+public class GroupAverage<T extends Number> extends NodeSource<Double> implements Source<Double>, Observer {
 
-    private final SourceGroup<Double> group;
+    private final SourceGroup<? extends Source<T>> group;
 
-    public GroupAverage(Endpoint API, Codec<Double> codec, SourceGroup<Double> group) {
-        super(API, codec, "group");
+    public GroupAverage(SourceGroup<? extends Source<T>> group, NodeFactory nodeFactory, Codec<Double> codec) {
+        super(nodeFactory.create(codec, "group avg"));
         this.group = group;
         group.attachObserver(this);
     }
@@ -23,10 +23,10 @@ public class GroupAverage extends StoredSource<Double> implements Source<Double>
         double value = 0;
         int count = 0;
 
-        for (Source<Double> s : group) {
-            Double v = s.getValue();
-            if (v == null)
-                continue;
+        for (Source<T> s : group) {
+            Number n = s.waitForValue();
+            if (n == null) continue;
+            double v = n.doubleValue();
             value = (value * count) + v;
             value /= ++count;
         }
@@ -34,7 +34,7 @@ public class GroupAverage extends StoredSource<Double> implements Source<Double>
         if (count == 0)
             return;
 
-        setValue(value);
+        node.setValue(value);
         signalMonitors();
     }
 }

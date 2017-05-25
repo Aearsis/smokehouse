@@ -40,7 +40,7 @@ public class SQLiteRealNumberSensorStorage implements Observer, SensorStorage<Do
         String update_query = "INSERT INTO " + table_name + " VALUES (?, ?)";
         try (PreparedStatement stmt = storage.prepareStatement(update_query)) {
             stmt.setLong(1, Instant.now().getEpochSecond());
-            stmt.setDouble(2, sensor.getValue());
+            stmt.setDouble(2, sensor.waitForValue());
             stmt.execute();
         }
     }
