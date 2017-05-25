@@ -12,7 +12,6 @@ class Bootstrap {
         try {
             ArgumentParser parser = ArgumentParserFactory.create();
             ClientOptions opts = parser.addOptions(new ClientOptions());
-            parser.addOptions(opts.multicastEndpointOptions);
             parser.parse(argv);
 
             Client client = new Client(opts);

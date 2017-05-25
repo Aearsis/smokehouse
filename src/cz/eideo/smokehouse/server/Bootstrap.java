@@ -13,7 +13,6 @@ class Bootstrap {
         try {
             ArgumentParser parser = ArgumentParserFactory.create();
             ServerOptions serverOptions = parser.addOptions(new ServerOptions());
-            parser.addOptions(serverOptions.multicastEndpointOptions);
             parser.parse(args);
 
             Server server = new Server(serverOptions);

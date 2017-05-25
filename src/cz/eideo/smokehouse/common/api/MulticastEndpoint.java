@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -18,13 +20,16 @@ public class MulticastEndpoint extends Container implements Runnable {
 
     private final MulticastSocket sock;
     private final MulticastEndpointOptions options;
+    private final static Logger logger = Logger.getLogger(MulticastEndpoint.class.getName());
 
     public MulticastEndpoint(ScheduledExecutorService executorService, MulticastEndpointOptions options) throws IOException {
         this.executorService = executorService;
         this.options = options;
 
         sock = new MulticastSocket(options.port);
-        //sock.setNetworkInterface(NetworkInterface.getByName("enp0s25"));
+        if (options.networkInterface != null) {
+            sock.setInterface(options.networkInterface);
+        }
         sock.setLoopbackMode(false);
         sock.setTimeToLive(255);
         sock.joinGroup(options.groupAddress);
@@ -115,7 +120,7 @@ public class MulticastEndpoint extends Container implements Runnable {
             DatagramPacket pkt = new DatagramPacket(buf.toByteArray(), len, options.groupAddress, options.port);
             sock.send(pkt);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.log(Level.WARNING, "Failed to flush the message queue: " + e.getMessage());
         } finally {
             if (!packetQueue.isEmpty())
                 scheduleFlush();

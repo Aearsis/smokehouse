@@ -1,9 +1,12 @@
 package cz.eideo.smokehouse.common.api;
 
+import cz.cuni.mff.yaclpplib.IllegalOptionValue;
 import cz.cuni.mff.yaclpplib.Options;
 import cz.cuni.mff.yaclpplib.annotation.*;
 
 import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 
 /**
@@ -42,9 +45,18 @@ public class MulticastEndpointOptions implements Options {
         }
     }
 
+    InetAddress networkInterface = null;
+
     @Option("--iface")
     @Option("-i")
     @Help("The network interface to listen on (default is the oif for group address)")
-    String iface;
+    private void findNetworkInterface(String name) {
+        try {
+            networkInterface = NetworkInterface.getByName(name);
+        } catch (SocketException e) {
+            throw new IllegalOptionValue(e.getMessage());
+        }
+    }
+
 
 }
