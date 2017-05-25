@@ -2,15 +2,11 @@ package cz.eideo.smokehouse.common.sensor;
 
 import cz.eideo.smokehouse.common.NodeSensor;
 import cz.eideo.smokehouse.common.Sensor;
-import cz.eideo.smokehouse.common.NodeSource;
-import cz.eideo.smokehouse.common.api.Endpoint;
-import cz.eideo.smokehouse.common.api.Node;
 import cz.eideo.smokehouse.common.api.NodeFactory;
 import cz.eideo.smokehouse.common.api.codec.ThermalCodec;
+import cz.eideo.smokehouse.common.event.EventFactory;
 import cz.eideo.smokehouse.common.statistics.SlidingAverage;
 import cz.eideo.smokehouse.common.storage.SensorStorage;
-
-import java.time.Instant;
 
 
 /**
@@ -22,9 +18,9 @@ public class Thermometer extends NodeSensor<Double> implements Sensor<Double> {
 
     private SensorStorage<Double> storage;
 
-    public Thermometer(NodeFactory nodeFactory) {
-        super(nodeFactory.create(ThermalCodec.INSTANCE, "sensor" ));
-        slidingAverage = new SlidingAverage<>(this, nodeFactory, ThermalCodec.INSTANCE, 16);
+    public Thermometer(NodeFactory nodeFactory, EventFactory eventFactory) {
+        super(nodeFactory.create(ThermalCodec.INSTANCE, "sensor" ), eventFactory);
+        slidingAverage = new SlidingAverage<>(this, 16, nodeFactory, ThermalCodec.INSTANCE, eventFactory);
     }
 
     public void setStorage(SensorStorage<Double> storage) {

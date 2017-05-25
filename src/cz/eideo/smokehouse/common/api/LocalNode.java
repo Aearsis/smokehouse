@@ -1,6 +1,7 @@
 package cz.eideo.smokehouse.common.api;
 
 import cz.eideo.smokehouse.common.api.codec.Codec;
+import cz.eideo.smokehouse.common.event.EventObservableObject;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -13,7 +14,7 @@ import java.util.logging.Logger;
  * @param <T>
  */
 
-public class LocalNode<T> implements Node<T> {
+public class LocalNode<T> extends EventObservableObject implements Node<T> {
 
     private final Endpoint API;
     private final int key;
@@ -45,6 +46,7 @@ public class LocalNode<T> implements Node<T> {
 
             this.value = value;
             API.sendValue(this);
+            signalMonitors();
         } catch (IOException e) {
             logger.log(Level.WARNING, "Failed to send value to API: " + e.getMessage());
         }

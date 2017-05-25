@@ -5,14 +5,11 @@ import cz.eideo.smokehouse.common.SessionStorage;
 import cz.eideo.smokehouse.common.api.MulticastEndpoint;
 import cz.eideo.smokehouse.common.api.NodeFactory;
 import cz.eideo.smokehouse.common.api.RemoteNode;
+import cz.eideo.smokehouse.common.event.Dispatcher;
 import cz.eideo.smokehouse.common.sensor.DefaultSensorFactory;
 import cz.eideo.smokehouse.common.setup.CubeSetup;
-import cz.eideo.smokehouse.common.util.Posix;
 
 import java.io.IOException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Simple debugging client instance. This client just dumps any source that changes its value.
@@ -25,18 +22,16 @@ import java.util.concurrent.TimeUnit;
 class Client {
 
     private final Session session;
-    private final MulticastEndpoint clientAPI;
+
     private final NodeFactory nodeFactory;
+    private final Dispatcher eventDispatcher = new Dispatcher();
+
+    private final ClientOptions options;
 
     Client(ClientOptions options) {
         try {
-            ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-            clientAPI = new MulticastEndpoint(executorService, options.multicastEndpointOptions);
-
-            Thread apiThread = new Thread(clientAPI);
-            apiThread.setName("Client API");
-            apiThread.setDaemon(true);
-            apiThread.start();
+            this.options = options;
+            MulticastEndpoint clientAPI = new MulticastEndpoint(eventDispatcher, options.multicastEndpointOptions);
 
             nodeFactory = RemoteNode.createNodeFactory(clientAPI);
             SessionStorage storage = new SessionStorage(nodeFactory);
@@ -53,21 +48,14 @@ class Client {
         if (s == null)
             throw new RuntimeException("Pro tento setup není klient připraven.");
 
-        s.setSensorFactory(new DefaultSensorFactory(nodeFactory));
+        s.setSensorFactory(new DefaultSensorFactory(nodeFactory, eventDispatcher));
         s.setupSensors();
 
         CubeConsoleDumper dumper = new CubeConsoleDumper(s);
-        ScheduledExecutorService dumperExecutor = Executors.newSingleThreadScheduledExecutor();
 
-        dumperExecutor.scheduleAtFixedRate(() -> {
-            try {
-                dumper.dump();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }, 0, 1000, TimeUnit.MILLISECONDS);
+        s.getCubeArea().attachObserver(eventDispatcher.createEvent(dumper::dump));
 
-        Posix.waitForSigterm(dumperExecutor::shutdown);
+        eventDispatcher.run();
     }
 }
 

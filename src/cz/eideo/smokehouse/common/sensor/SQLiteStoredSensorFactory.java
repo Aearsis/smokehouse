@@ -1,8 +1,8 @@
 package cz.eideo.smokehouse.common.sensor;
 
 import cz.eideo.smokehouse.common.Sensor;
-import cz.eideo.smokehouse.common.api.Endpoint;
 import cz.eideo.smokehouse.common.api.NodeFactory;
+import cz.eideo.smokehouse.common.event.EventFactory;
 import cz.eideo.smokehouse.common.storage.SensorStorage;
 import cz.eideo.smokehouse.common.storage.SQLiteRealNumberSensorStorage;
 import cz.eideo.smokehouse.common.storage.SQLiteStorage;
@@ -13,8 +13,8 @@ public class SQLiteStoredSensorFactory extends DefaultSensorFactory {
 
     private final SQLiteStorage storage;
 
-    public SQLiteStoredSensorFactory(NodeFactory factory, SQLiteStorage sqLiteStorage) {
-        super(factory);
+    public SQLiteStoredSensorFactory(NodeFactory nodeFactory, EventFactory eventFactory, SQLiteStorage sqLiteStorage) {
+        super(nodeFactory, eventFactory);
         this.storage = sqLiteStorage;
     }
 
@@ -28,7 +28,7 @@ public class SQLiteStoredSensorFactory extends DefaultSensorFactory {
 
     private SensorStorage<Double> createRealStorage(Sensor<Double> t, SQLiteStorage storage) throws FactoryException {
         try {
-            return new SQLiteRealNumberSensorStorage(storage, t);
+            return new SQLiteRealNumberSensorStorage(t, storage, eventFactory);
         } catch (SQLException e) {
             throw new FactoryException("Failed creating sensor storage.", e);
         }

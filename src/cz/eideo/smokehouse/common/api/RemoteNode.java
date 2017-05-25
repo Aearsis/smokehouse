@@ -1,7 +1,7 @@
 package cz.eideo.smokehouse.common.api;
 
 import cz.eideo.smokehouse.common.api.codec.Codec;
-import cz.eideo.smokehouse.common.util.ObservableObject;
+import cz.eideo.smokehouse.common.event.EventObservableObject;
 
 import java.util.Optional;
 import java.util.logging.Level;
@@ -13,7 +13,7 @@ import java.util.logging.Logger;
  * @param <T>
  */
 
-public class RemoteNode<T> extends ObservableObject implements Node<T> {
+public class RemoteNode<T> extends EventObservableObject implements Node<T> {
 
     private final Endpoint endpoint;
     private final int key;
@@ -38,9 +38,10 @@ public class RemoteNode<T> extends ObservableObject implements Node<T> {
         while (!value.isPresent()) {
             try {
                 endpoint.sendQuery(this);
+                endpoint.flushQueue();
                 // We really need the value, so spam the network -
                 // but remember we need to receive the response :)
-                wait(100);
+                wait(300);
             } catch (InterruptedException ignored) { }
         }
 
@@ -68,7 +69,6 @@ public class RemoteNode<T> extends ObservableObject implements Node<T> {
 
     @Override
     public Optional<T> getImmediateValue() {
-        logger.log(Level.WARNING, "Remote API node value is read from API.");
         return value;
     }
 

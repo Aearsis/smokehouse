@@ -29,15 +29,15 @@ public class CubeSetup extends Setup implements ThermometerArray {
     private ThermoArea[] thermoAreas;
 
     final static HashMap<Integer, String> columnNames = new HashMap<Integer, String>() {{
-        put(0, "back left");    put(1, "back middle");  put(2, "back right");
-        put(3, "middle left");  put(4, "middle");       put(5, "middle right");
-        put(6, "front left");   put(7, "front middle"); put(8, "front right");
+        put(0, "back-left");    put(1, "back-middle");  put(2, "back-right");
+        put(3, "middle-left");  put(4, "middle");       put(5, "middle-right");
+        put(6, "front-left");   put(7, "front-middle"); put(8, "front-right");
     }};
 
     private void createThermometer(int i) {
         try {
             StringBuilder nameBuilder = new StringBuilder();
-            nameBuilder.append(i >= 9 ? "bottom" : "top").append(" ");
+            nameBuilder.append(i >= 9 ? "bottom" : "top").append("-");
             nameBuilder.append(columnNames.get(i % 9));
             Thermometer t = thermometers[i] = sensorFactory.createThermometer(nameBuilder.toString());
             getColumnArea(i % 9).addThermometer(t);

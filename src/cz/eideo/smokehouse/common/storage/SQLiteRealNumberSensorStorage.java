@@ -1,7 +1,8 @@
 package cz.eideo.smokehouse.common.storage;
 
 import cz.eideo.smokehouse.common.Sensor;
-import cz.eideo.smokehouse.common.util.Observer;
+import cz.eideo.smokehouse.common.event.Event;
+import cz.eideo.smokehouse.common.event.EventFactory;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,19 +13,19 @@ import java.time.Instant;
 /**
  * Sensor storage backed by SQLite.
  */
-public class SQLiteRealNumberSensorStorage implements Observer, SensorStorage<Double> {
+public class SQLiteRealNumberSensorStorage implements SensorStorage<Double> {
 
     private final SQLiteStorage storage;
     private final Sensor<Double> sensor;
     private final String table_name;
 
-    public SQLiteRealNumberSensorStorage(SQLiteStorage storage, Sensor<Double> sensor) throws SQLException {
+    public SQLiteRealNumberSensorStorage(Sensor<Double> sensor, SQLiteStorage storage, EventFactory eventFactory) throws SQLException {
         this.storage = storage;
         this.sensor = sensor;
-        sensor.attachObserver(this);
-        table_name = storage.getNamespace();
+        table_name = "[" + storage.getNamespace() + "]";
 
         createTable();
+        sensor.attachObserver(eventFactory.createEvent(this::signalFired));
     }
 
     private void createTable() throws SQLException {
@@ -61,12 +62,12 @@ public class SQLiteRealNumberSensorStorage implements Observer, SensorStorage<Do
         }
     }
 
-    @Override
-    public void handleSignal() {
+    private void signalFired() {
         try {
             handleUpdateValue();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
 }

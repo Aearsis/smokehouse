@@ -1,6 +1,6 @@
 package cz.eideo.smokehouse.common;
 
-import cz.eideo.smokehouse.common.util.Observable;
+import cz.eideo.smokehouse.common.event.EventObservable;
 
 import java.util.Optional;
 
@@ -10,14 +10,10 @@ import java.util.Optional;
  * The value can be of any type, and can be either calculated from other sources (statistics, aggregators etc.),
  * or acquired from physical sensors - then they should implement the Sensor interface.
  */
-public interface Source<T> extends Observable {
+public interface Source<T> extends EventObservable {
 
     T waitForValue();
 
-    /**
-     * Asynchronous interface.
-     */
-    void queryValue();
     Optional<T> getValue();
 
 }

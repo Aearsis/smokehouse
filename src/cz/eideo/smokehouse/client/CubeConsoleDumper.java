@@ -1,5 +1,7 @@
 package cz.eideo.smokehouse.client;
 
+import cz.eideo.smokehouse.common.event.Event;
+import cz.eideo.smokehouse.common.event.EventFactory;
 import cz.eideo.smokehouse.common.setup.CubeSetup;
 import cz.eideo.smokehouse.common.sensor.*;
 import cz.eideo.smokehouse.common.statistics.*;
@@ -150,4 +152,5 @@ class CubeConsoleDumper {
         else if (value >= 90)
             toolkit.setColor(ConsoleToolkit.Color.RED);
     }
+
 }

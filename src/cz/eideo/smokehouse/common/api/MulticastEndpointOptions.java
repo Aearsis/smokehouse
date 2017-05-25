@@ -52,7 +52,10 @@ public class MulticastEndpointOptions implements Options {
     @Help("The network interface to listen on (default is the oif for group address)")
     private void findNetworkInterface(String name) {
         try {
-            networkInterface = NetworkInterface.getByName(name);
+            networkInterface = NetworkInterface.getByName(name).getInterfaceAddresses().stream()
+                    .findAny()
+                    .orElseThrow(() -> new IllegalOptionValue("This interface does not have any address."))
+                    .getAddress();
         } catch (SocketException e) {
             throw new IllegalOptionValue(e.getMessage());
         }

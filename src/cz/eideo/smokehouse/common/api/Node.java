@@ -1,6 +1,7 @@
 package cz.eideo.smokehouse.common.api;
 
 import cz.eideo.smokehouse.common.api.codec.Codec;
+import cz.eideo.smokehouse.common.event.EventObservable;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -12,7 +13,7 @@ import java.util.Optional;
  *
  * It always has a value, though it need not to be a "real" value.
  */
-public interface Node<T> {
+public interface Node<T> extends EventObservable {
 
     int getApiKey();
     Endpoint getEndpoint();

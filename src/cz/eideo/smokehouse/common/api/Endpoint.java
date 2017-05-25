@@ -13,6 +13,12 @@ import java.io.IOException;
 public interface Endpoint {
 
     /**
+     * When you block waiting for a value to be received,
+     * you must flush the queue inside your event handler.
+     */
+    void flushQueue();
+
+    /**
      * Instructs the API to fetch value from node.
      *
      * @param node the API node

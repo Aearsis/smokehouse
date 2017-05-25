@@ -4,6 +4,7 @@ import cz.eideo.smokehouse.common.Session;
 import cz.eideo.smokehouse.common.api.LocalNode;
 import cz.eideo.smokehouse.common.api.MulticastEndpoint;
 import cz.eideo.smokehouse.common.api.NodeFactory;
+import cz.eideo.smokehouse.common.event.Dispatcher;
 import cz.eideo.smokehouse.common.feeder.LogFeeder;
 import cz.eideo.smokehouse.common.sensor.SQLiteStoredSensorFactory;
 import cz.eideo.smokehouse.common.setup.CubeSetup;
@@ -12,8 +13,6 @@ import cz.eideo.smokehouse.common.storage.SQLiteStorage;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Server instance. It initializes the environment for running server.
@@ -29,18 +28,13 @@ class Server {
     private final SQLiteStorage db;
     private final ServerOptions options;
     private final NodeFactory nodeFactory;
-    private MulticastEndpoint serverAPI;
+
+    private final Dispatcher eventDispatcher = new Dispatcher();
 
     Server(ServerOptions options) {
         try {
             this.options = options;
-            ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-            serverAPI = new MulticastEndpoint(executorService, options.multicastEndpointOptions);
-
-            Thread apiThread = new Thread(serverAPI);
-            apiThread.setName("Server API");
-            apiThread.setDaemon(true);
-            apiThread.start();
+            MulticastEndpoint serverAPI = new MulticastEndpoint(eventDispatcher, options.multicastEndpointOptions);
 
             db = SQLiteStorage.fromFile(options.dbName);
             nodeFactory = LocalNode.createNodeFactory(serverAPI);
@@ -67,11 +61,13 @@ class Server {
         if (s == null)
             throw new RuntimeException("This server can only work with CubeSetup.");
 
-        s.setSensorFactory(new SQLiteStoredSensorFactory(nodeFactory, db));
+        s.setSensorFactory(new SQLiteStoredSensorFactory(nodeFactory, eventDispatcher, db));
         s.setupSensors();
 
-        LogFeeder logFeeder = new LogFeeder(this.options.logStream, s);
+        LogFeeder logFeeder = new LogFeeder(options.logStream, s, options.replaySpeedup, eventDispatcher);
         logFeeder.run();
+
+        eventDispatcher.run();
     }
 }
 

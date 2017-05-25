@@ -4,12 +4,13 @@ import cz.eideo.smokehouse.common.Source;
 import cz.eideo.smokehouse.common.NodeSource;
 import cz.eideo.smokehouse.common.api.NodeFactory;
 import cz.eideo.smokehouse.common.api.codec.Codec;
-import cz.eideo.smokehouse.common.util.Observer;
+import cz.eideo.smokehouse.common.event.Event;
+import cz.eideo.smokehouse.common.event.EventFactory;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-public class SlidingAverage<T extends Number> extends NodeSource<Double> implements Source<Double>, Observer {
+public class SlidingAverage<T extends Number> extends NodeSource<Double> implements Source<Double> {
 
     private final Source<T> sensor;
 
@@ -20,21 +21,20 @@ public class SlidingAverage<T extends Number> extends NodeSource<Double> impleme
 
     private final Deque<Double> historicValues;
 
-    public SlidingAverage(Source<T> sensor, NodeFactory nodeFactory, Codec<Double> codec, int windowSize) {
-        super(nodeFactory.create(codec, "sliding avg (" + windowSize + ")"));
+    public SlidingAverage(Source<T> sensor, int windowSize, NodeFactory nodeFactory, Codec<Double> codec, EventFactory eventFactory) {
+        super(nodeFactory.create(codec, "sliding avg (" + windowSize + ")"), eventFactory);
         this.sensor = sensor;
         this.windowSize = windowSize;
         historicValues = new ArrayDeque<>(windowSize);
-        sensor.attachObserver(this);
         node.setValue(0d);
+        sensor.attachObserver(eventFactory.createEvent(this::signalFired));
     }
 
-    @Override
-    public void handleSignal() {
+    private void signalFired() {
         double current = sensor.waitForValue().doubleValue();
         if (historicValues.size() == windowSize) {
             Double removed = historicValues.remove();
-            node.setValue(waitForValue() + (current - removed) / windowSize);
+            node.setValue(node.waitForValue() + (current - removed) / windowSize);
             historicValues.add(current);
         } else {
             double sum = waitForValue() * historicValues.size();

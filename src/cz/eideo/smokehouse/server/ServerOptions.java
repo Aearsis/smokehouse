@@ -38,5 +38,9 @@ class ServerOptions implements Options {
         }
     }
 
+    @Option(value = "--replay-speedup", help = "--replay-speedup=R")
+    @Help("The log will be replayed R times faster (default 1)")
+    long replaySpeedup = 1;
+
 
 }

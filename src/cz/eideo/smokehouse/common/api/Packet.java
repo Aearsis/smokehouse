@@ -56,4 +56,22 @@ class Packet implements Comparable<Packet> {
             return this.key - other.key;
         return 0;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Packet packet = (Packet) o;
+
+        if (type != packet.type) return false;
+        return key == packet.key;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) type;
+        result = 31 * result + key;
+        return result;
+    }
 }

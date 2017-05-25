@@ -1,5 +1,7 @@
 package cz.eideo.smokehouse.common.feeder;
 
+import cz.eideo.smokehouse.common.event.Event;
+import cz.eideo.smokehouse.common.event.EventFactory;
 import cz.eideo.smokehouse.common.setup.ThermometerArray;
 
 import java.io.*;
@@ -34,16 +36,20 @@ public class LogFeeder implements Runnable {
     final BufferedReader input;
     final ThermometerArray thermometers;
 
+    final long replaySpeedup;
+
     final static DateTimeFormatter outputFormatter = DateTimeFormatter
             .ofLocalizedDateTime(FormatStyle.FULL)
             .withLocale(Locale.getDefault())
             .withZone(ZoneId.systemDefault());
 
+    private final Event updateEvent;
+
     private static class DataRow {
         Instant time;
         Double[] values;
 
-        public DataRow(String line) throws FormatException {
+        DataRow(String line) throws FormatException {
             String[] split = line.split("\t");
             if (split.length != count + 1)
                 throw new FormatException("Invalid number of fields.");
@@ -65,37 +71,49 @@ public class LogFeeder implements Runnable {
     }
 
 
-    public LogFeeder(InputStream input, ThermometerArray thermometers) {
+    public LogFeeder(InputStream input, ThermometerArray thermometers, long replaySpeedup, EventFactory eventFactory) {
         this.input = new BufferedReader(new InputStreamReader(input));
         this.thermometers = thermometers;
+        this.replaySpeedup = replaySpeedup;
+
+        this.updateEvent = eventFactory.createEvent(this::feed);
+    }
+
+    private Instant offset;
+    private Instant started;
+    private DataRow nextRow;
+
+    private void feed() {
+        emitValues(nextRow);
+        getLogger().log(Level.INFO, "Fed values from " + outputFormatter.format(nextRow.time));
+
+        try {
+            if (input.ready()) {
+                nextRow = new DataRow(input.readLine());
+
+                final Instant at = started.plus(Duration.between(offset, nextRow.time).dividedBy(replaySpeedup));
+                updateEvent.scheduleTo(at);
+            } else {
+                logger.log(Level.INFO, "Finished feeding. Good apetite!");
+            }
+        } catch (IOException | FormatException e) {
+            getLogger().log(Level.SEVERE, "An error occured while reading the logfile. Feeding will stop.", e);
+        }
     }
 
     @Override
     public void run() {
         try {
-            final DataRow firstDataRow = new DataRow(this.input.readLine());
-            final Instant offset = firstDataRow.time;
-            final Instant started = Instant.now();
+            nextRow = new DataRow(input.readLine());
+            offset = nextRow.time;
+            started = Instant.now();
 
             getLogger().log(Level.INFO, "Started feeding from log file.");
             getLogger().log(Level.INFO, "Replayed smoking started at " + outputFormatter.format(offset));
-            emitValues(firstDataRow);
 
-            while (input.ready()) {
-                final DataRow dataRow = new DataRow(input.readLine());
-
-                final Instant at = started.plus(Duration.between(offset, dataRow.time));
-                final Duration sleepFor = Duration.between(Instant.now(), at);
-                //Thread.sleep(sleepFor.toMillis());
-                Thread.sleep(100);
-                emitValues(dataRow);
-                getLogger().log(Level.INFO, "Fed values from " + outputFormatter.format(dataRow.time));
-            }
-        } catch (InterruptedException ignored) {
-            getLogger().log(Level.INFO, "The thread was interrupted, exiting...");
-        } catch (Exception e) {
-            getLogger().log(Level.SEVERE, "An error occured while reading the logfile. Feeding will stop. ");
-            e.printStackTrace();
+            updateEvent.schedule();
+        } catch (FormatException | IOException e) {
+            getLogger().log(Level.SEVERE, "An error occured while reading the logfile. Feeding will stop.", e);
         }
     }
 
