@@ -7,15 +7,11 @@ import java.io.PrintWriter;
  */
 class TerminalToolkit extends BareToolkit {
 
-    public void flush() {
-        writer.flush();
-    }
-
-    public TerminalToolkit(PrintWriter writer) {
+    TerminalToolkit(PrintWriter writer) {
         super(writer);
     }
 
-    Color currentColor = Color.DEFAULT;
+    private Color currentColor = Color.DEFAULT;
 
     @Override
     public void clearScreen() {
@@ -29,7 +25,8 @@ class TerminalToolkit extends BareToolkit {
         lineStarted = false;
     }
 
-    private void startLine() {
+    @Override
+    protected void startLine() {
         if (lineStarted || linePrefix == null)
             return;
 
@@ -50,5 +47,11 @@ class TerminalToolkit extends BareToolkit {
     public void resetColor() {
         setColor(Color.DEFAULT);
     }
+
+    @Override
+    public void flush() {
+        writer.flush();
+    }
+
 
 }

@@ -1,4 +1,4 @@
-package cz.eideo.smokehouse.common;
+package cz.eideo.smokehouse.common.sensor;
 
 /**
  * Sensors are the physical sensors present in the smokehouse.
@@ -11,7 +11,7 @@ public interface Sensor<T> extends Source<T> {
     /**
      * A new value is read from the real sensor.
      *
-     * @param value
+     * @param value the current value
      */
     void updateValue(T value);
 }

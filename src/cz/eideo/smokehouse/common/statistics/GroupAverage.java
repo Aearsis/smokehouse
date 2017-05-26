@@ -1,8 +1,8 @@
 package cz.eideo.smokehouse.common.statistics;
 
-import cz.eideo.smokehouse.common.Source;
-import cz.eideo.smokehouse.common.SourceGroup;
-import cz.eideo.smokehouse.common.NodeSource;
+import cz.eideo.smokehouse.common.sensor.Source;
+import cz.eideo.smokehouse.common.sensor.SourceGroup;
+import cz.eideo.smokehouse.common.sensor.NodeSource;
 import cz.eideo.smokehouse.common.api.NodeFactory;
 import cz.eideo.smokehouse.common.api.codec.Codec;
 import cz.eideo.smokehouse.common.event.EventFactory;
@@ -10,6 +10,9 @@ import cz.eideo.smokehouse.common.event.EventFactory;
 import java.util.Optional;
 
 
+/**
+ * A simple average of numeric sensors in a group.
+ */
 public class GroupAverage<T extends Number> extends NodeSource<Double> implements Source<Double> {
 
     private final SourceGroup<? extends Source<T>> group;
@@ -20,7 +23,10 @@ public class GroupAverage<T extends Number> extends NodeSource<Double> implement
         group.attachObserver(eventFactory.createEvent(this::updateValue));
     }
 
-    public void updateValue() {
+    /**
+     * Event handler.
+     */
+    private void updateValue() {
         double value = 0;
         int count = 0;
 

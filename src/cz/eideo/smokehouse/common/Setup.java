@@ -9,8 +9,9 @@ import cz.eideo.smokehouse.common.sensor.SensorFactory;
  * otherwise loading old sessions will become impossible.
  * <p>
  * However, adding new statistics to sensors themselves should be safe.
+ * The API heavily relies on the Setup compatibility, but only sensors should be stored.
  * <p>
- * Setup is identified by its classname.
+ * Setup is identified by its classname. It must be default-constructible.
  */
 abstract public class Setup {
 
@@ -18,8 +19,7 @@ abstract public class Setup {
 
     /**
      * It is mandatory to set a sensorFactory before calling setupSensors.
-     *
-     * @param factory
+     * @param factory the factory to use
      */
     public void setSensorFactory(SensorFactory factory) {
         sensorFactory = factory;

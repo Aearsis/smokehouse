@@ -1,6 +1,5 @@
 package cz.eideo.smokehouse.common.sensor;
 
-import cz.eideo.smokehouse.common.Sensor;
 import cz.eideo.smokehouse.common.api.NodeFactory;
 import cz.eideo.smokehouse.common.event.EventFactory;
 import cz.eideo.smokehouse.common.storage.SensorStorage;
@@ -9,6 +8,9 @@ import cz.eideo.smokehouse.common.storage.SQLiteStorage;
 
 import java.sql.SQLException;
 
+/**
+ * A {@link SensorFactory}, that stores sensor's values in the SQLiteStorage.
+ */
 public class SQLiteStoredSensorFactory extends DefaultSensorFactory {
 
     private final SQLiteStorage storage;

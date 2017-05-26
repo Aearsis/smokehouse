@@ -1,7 +1,6 @@
 package cz.eideo.smokehouse.common.storage;
 
-import cz.eideo.smokehouse.common.Sensor;
-import cz.eideo.smokehouse.common.event.Event;
+import cz.eideo.smokehouse.common.sensor.Sensor;
 import cz.eideo.smokehouse.common.event.EventFactory;
 
 import java.sql.PreparedStatement;
@@ -9,9 +8,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Instant;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- * Sensor storage backed by SQLite.
+ * A storage for a real value sensor backed by SQLite.
  */
 public class SQLiteRealNumberSensorStorage implements SensorStorage<Double> {
 
@@ -25,9 +26,13 @@ public class SQLiteRealNumberSensorStorage implements SensorStorage<Double> {
         table_name = "[" + storage.getNamespace() + "]";
 
         createTable();
-        sensor.attachObserver(eventFactory.createEvent(this::signalFired));
+        sensor.attachObserver(eventFactory.createEvent(this::storeCurrentValue));
     }
 
+    /**
+     * Initialize the storage.
+     * @throws SQLException on db error
+     */
     private void createTable() throws SQLException {
         try (Statement stmt = storage.createStatement()) {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS " + table_name + " (" +
@@ -37,15 +42,26 @@ public class SQLiteRealNumberSensorStorage implements SensorStorage<Double> {
         }
     }
 
-    private void handleUpdateValue() throws SQLException {
+    /**
+     * Event handler - store the current value.
+     */
+    private void storeCurrentValue() {
         String update_query = "INSERT INTO " + table_name + " VALUES (?, ?)";
         try (PreparedStatement stmt = storage.prepareStatement(update_query)) {
             stmt.setLong(1, Instant.now().getEpochSecond());
             stmt.setDouble(2, sensor.waitForValue());
             stmt.execute();
+        } catch (SQLException e) {
+            Logger.getLogger(getClass().getName()).log(Level.WARNING, "Failed to store value: " + e.getMessage(), e);
         }
     }
 
+    /**
+     * Find the latest value in the time given.
+     *
+     * @param time time in which to query for value
+     * @return the value in time
+     */
     @Override
     public Double getValueInTime(Instant time) {
         try (PreparedStatement stmt = storage.prepareStatement("SELECT * FROM " + table_name +
@@ -61,13 +77,4 @@ public class SQLiteRealNumberSensorStorage implements SensorStorage<Double> {
             return null;
         }
     }
-
-    private void signalFired() {
-        try {
-            handleUpdateValue();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
 }

@@ -2,13 +2,14 @@ package cz.eideo.smokehouse.common.storage;
 
 import cz.eideo.smokehouse.common.Session;
 import cz.eideo.smokehouse.common.SessionStorage;
-import cz.eideo.smokehouse.common.api.Endpoint;
 import cz.eideo.smokehouse.common.api.NodeFactory;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Session storage backed by SQLite.
@@ -16,18 +17,26 @@ import java.sql.Statement;
 public class SQLiteSessionStorage extends SessionStorage {
 
     private final SQLiteStorage storage;
-
     private final String table_name;
 
+    /**
+     * When the format is changed, increment this number.
+     */
     private final int current_version = 1;
 
     public SQLiteSessionStorage(NodeFactory nodeFactory, SQLiteStorage storage) throws SQLException, ClassNotFoundException {
         super(nodeFactory);
         this.storage = storage;
-        table_name = this.storage.getNamespacedIdentifier("state");
+        table_name = "[" + this.storage.getNamespacedIdentifier("state") + "]";
         loadState();
     }
 
+    /**
+     * Load the state row from database.
+     *
+     * @throws SQLException on db error
+     * @throws ClassNotFoundException when unable to find the setup class
+     */
     private void loadState() throws SQLException, ClassNotFoundException {
         try (Statement stmt = storage.createStatement()) {
 
@@ -56,10 +65,17 @@ public class SQLiteSessionStorage extends SessionStorage {
         }
     }
 
+    /**
+     * The initial state when the database was not initialized yet.
+     */
     private void loadDefaults() {
         setState(Session.State.NEW);
     }
 
+    /**
+     * Initialize the database
+     * @throws SQLException on db error
+     */
     private void createDatabase() throws SQLException {
         try (Statement stmt = storage.createStatement()) {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS " + table_name + " (" +
@@ -71,6 +87,10 @@ public class SQLiteSessionStorage extends SessionStorage {
     }
 
 
+    /**
+     * Flush current state into the db
+     * @throws SQLException on db error
+     */
     private void saveState() throws SQLException {
         String update_query = "INSERT INTO " + table_name + " VALUES (?, ?, ?)";
         try (PreparedStatement stmt = storage.prepareStatement(update_query)) {
@@ -86,7 +106,8 @@ public class SQLiteSessionStorage extends SessionStorage {
         super.flush();
         try {
             saveState();
-        } catch (SQLException ignored) {
+        } catch (SQLException e) {
+            Logger.getLogger(getClass().getName()).log(Level.WARNING, "Cannot save session state: " + e.getMessage(), e);
         }
     }
 }

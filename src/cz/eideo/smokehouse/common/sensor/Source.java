@@ -1,4 +1,4 @@
-package cz.eideo.smokehouse.common;
+package cz.eideo.smokehouse.common.sensor;
 
 import cz.eideo.smokehouse.common.event.EventObservable;
 

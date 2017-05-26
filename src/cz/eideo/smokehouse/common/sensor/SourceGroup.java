@@ -1,4 +1,4 @@
-package cz.eideo.smokehouse.common;
+package cz.eideo.smokehouse.common.sensor;
 
 import cz.eideo.smokehouse.common.event.Event;
 import cz.eideo.smokehouse.common.event.EventFactory;
@@ -11,8 +11,7 @@ import java.util.List;
 /**
  * Something like a virtual sensor, coupling more sensors together.
  * <p>
- * Signals whenever a sensor signals. Because we often do updates on whole group at once,
- * there is a batch update API.
+ * Signals whenever a sensor signals.
  */
 public class SourceGroup<T extends Source<?>> extends EventObservableObject implements Iterable<T> {
 
@@ -20,26 +19,21 @@ public class SourceGroup<T extends Source<?>> extends EventObservableObject impl
 
     private final Event signalEvent;
 
-    public SourceGroup(EventFactory eventFactory) {
+    SourceGroup(EventFactory eventFactory) {
         signalEvent = eventFactory.createEvent(this::signalMonitors);
     }
 
-    protected int addSource(T s) {
+    void addSource(T s) {
         s.attachObserver(signalEvent);
         sensors.add(s);
-        return sensors.size() - 1;
     }
 
-    public T getSource(int i) {
+    T getSource(int i) {
         return sensors.get(i);
     }
 
     @Override
     public Iterator<T> iterator() {
         return sensors.iterator();
-    }
-
-    public int size() {
-        return sensors.size();
     }
 }

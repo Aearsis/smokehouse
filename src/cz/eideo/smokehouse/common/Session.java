@@ -11,23 +11,19 @@ public class Session {
         NEW, INITIALIZED
     }
 
-    private final SessionStorage storage;
-    private Setup setup;
-
     private final Endpoint endpoint;
+    private final SessionStorage storage;
+
+    private Setup setup;
 
     public Session(SessionStorage storage, Endpoint api) {
         this.storage = storage;
         this.endpoint = api;
     }
 
-    public void setSetup(Setup s) {
-        if (setup != null)
-            throw new IllegalStateException("Setup already set or loaded.");
-
-        setup = s;
-    }
-
+    /**
+     * Create an instance of setup, according to the setupClass.
+     */
     public void loadSetup() {
         if (setup != null)
             throw new IllegalStateException("Setup already set or loaded.");
@@ -35,7 +31,7 @@ public class Session {
         try {
             setup = (Setup) storage.getSetupClass().newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
-            throw new RuntimeException(String.format("Setup %s nelze načítat dynamicky.", storage.getSetupClass()), e);
+            throw new RuntimeException(String.format("Setup %s is not constructible.", storage.getSetupClass()), e);
         }
     }
 

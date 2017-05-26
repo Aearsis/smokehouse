@@ -4,36 +4,28 @@ import cz.eideo.smokehouse.common.api.codec.Codec;
 import cz.eideo.smokehouse.common.event.EventObservableObject;
 
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
- * Storage nodes stores their value and uses codecs for writing and reading.
- *
- * @param <T>
+ * The RemoteNode is reflecting the value being shared by the LocalNode.
  */
 
 public class RemoteNode<T> extends EventObservableObject implements Node<T> {
 
     private final Endpoint endpoint;
     private final int key;
-
     private final Codec<T> codec;
-    private final String name;
 
     private Optional<T> value = Optional.empty();
 
-    final static Logger logger = Logger.getLogger(RemoteNode.class.getName());
-
-    public RemoteNode(Endpoint endpoint, Codec<T> codec, String name) {
+    private RemoteNode(Endpoint endpoint, Codec<T> codec, String name) {
         this.codec = codec;
         this.endpoint = endpoint;
-        this.name = name;
         key = endpoint.assignKey();
         endpoint.addNode(this);
         endpoint.sendQuery(this);
     }
 
+    @Override
     public synchronized T waitForValue() {
         while (!value.isPresent()) {
             try {
@@ -48,6 +40,7 @@ public class RemoteNode<T> extends EventObservableObject implements Node<T> {
         return value.get();
     }
 
+    @Override
     public synchronized void setValue(T value) {
         if (value.equals(this.value))
             return;
@@ -84,12 +77,6 @@ public class RemoteNode<T> extends EventObservableObject implements Node<T> {
 
     public Codec<T> getCodec() {
         return codec;
-    }
-
-    @Override
-    public void dump() {
-        System.err.print(name + " = ");
-        System.err.println(value);
     }
 
     public static NodeFactory createNodeFactory(final Endpoint endpoint) {

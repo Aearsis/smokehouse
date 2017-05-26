@@ -1,38 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="smokehouse" default="all">
+<project name="smokehouse" default="build">
 
-    <path id="library.sqlite-jdbc-3.15.1.classpath">
-    </path>
+    <dirname property="basedir" file="${ant.file}"/>
 
-    <dirname property="smokehouse.basedir" file="${ant.file}"/>
-    <property name="smokehouse.output.dir" value="${smokehouse.basedir}/build/"/>
+    <property name="builddir" value="${basedir}/build"/>
+    <property name="docdir" value="${basedir}/doc"/>
 
-    <path id="smokehouse.classpath">
+    <path id="classpath">
         <fileset dir="lib" includes="*.jar"/>
     </path>
 
-    <path id="smokehouse.module.sourcepath">
-        <dirset dir="${smokehouse.basedir}">
+    <path id="sourcepath">
+        <dirset dir="${basedir}">
             <include name="src"/>
         </dirset>
     </path>
 
+    <target name="clean" description="cleanup">
+        <delete dir="${builddir}"/>
+        <delete dir="${docdir}"/>
+        <delete>
+            <fileset dir="${basedir}" includes="*.jar"/>
+        </delete>
+    </target>
+
     <target name="compile" description="Compile Smokehouse sources">
-        <mkdir dir="${smokehouse.output.dir}"/>
-        <javac destdir="${smokehouse.output.dir}" fork="true" includeantruntime="false">
-            <src refid="smokehouse.module.sourcepath"/>
-            <classpath refid="smokehouse.classpath"/>
+        <mkdir dir="${builddir}"/>
+        <javac destdir="${builddir}" fork="true" includeantruntime="false">
+            <src refid="sourcepath"/>
+            <classpath refid="classpath"/>
         </javac>
     </target>
 
-    <target name="clean" description="cleanup">
-        <delete dir="${smokehouse.output.dir}"/>
-    </target>
 
-    <target name="build" depends="clean, compile" description="build all modules"/>
-
-    <target name="package-server" depends="build">
-        <jar destfile="smokehouse-server.jar" basedir="${smokehouse.output.dir}">
+    <target name="package-server" depends="compile">
+        <jar destfile="smokehouse-server.jar" basedir="${builddir}">
             <zipfileset src="lib/sqlite-jdbc-3.15.1.jar"/>
             <zipfileset src="lib/yaclpplib-1.0.jar"/>
             <include name="cz/eideo/smokehouse/common/**" />
@@ -44,8 +46,8 @@
         </jar>
     </target>
 
-    <target name="package-client" depends="build">
-        <jar destfile="smokehouse-client.jar" basedir="${smokehouse.output.dir}">
+    <target name="package-client" depends="compile">
+        <jar destfile="smokehouse-client.jar" basedir="${builddir}">
             <zipfileset src="lib/sqlite-jdbc-3.15.1.jar"/>
             <zipfileset src="lib/yaclpplib-1.0.jar"/>
             <include name="cz/eideo/smokehouse/common/**" />
@@ -56,5 +58,17 @@
         </jar>
     </target>
 
-    <target name="all" depends="package-server, package-client" description="build all"/>
+    <target name="build" depends="package-client, package-server"/>
+
+    <target name="doc">
+        <mkdir dir="${docdir}"/>
+        <javadoc destdir="${docdir}" access="private" overview="overview.html" charset="utf8">
+            <fileset dir="${basedir}/src" defaultexcludes="yes">
+                <include name="**/*.java"/>
+            </fileset>
+            <classpath refid="classpath"/>
+        </javadoc>
+    </target>
+
+    <target name="all" depends="clean, build, doc" description="build all"/>
 </project>

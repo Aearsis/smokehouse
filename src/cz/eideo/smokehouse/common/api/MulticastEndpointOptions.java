@@ -22,10 +22,6 @@ public class MulticastEndpointOptions implements Options {
     @Help("Maximum packet size (B, default 1500)")
     public int maxPacketSize = 1500;
 
-    @Option("--aggregate-delay")
-    @Help("How long to queue packets to send burst (ms, default 50)")
-    public long aggregateDelay = 50;
-
     public MulticastEndpointOptions() throws UnknownHostException { }
 
     @Option(value = "--listen", help = "--listen=[host][:port]")

@@ -1,4 +1,4 @@
-package cz.eideo.smokehouse.common;
+package cz.eideo.smokehouse.common.sensor;
 
 import cz.eideo.smokehouse.common.api.Node;
 import cz.eideo.smokehouse.common.event.EventFactory;
@@ -7,16 +7,13 @@ import cz.eideo.smokehouse.common.event.EventObservableObject;
 import java.util.Optional;
 
 /**
- * Class with value stored inside API node.
- *
- * @param <T>
+ * Source with value stored inside API node.
  */
 abstract public class NodeSource<T> extends EventObservableObject implements Source<T> {
 
     protected final Node<T> node;
 
-
-    public NodeSource(Node<T> node, EventFactory eventFactory) {
+    protected NodeSource(Node<T> node, EventFactory eventFactory) {
         this.node = node;
         node.attachObserver(eventFactory.createEvent(this::signalMonitors));
     }

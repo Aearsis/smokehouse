@@ -15,7 +15,14 @@ import java.util.Optional;
  */
 public interface Node<T> extends EventObservable {
 
+    /**
+     * Get the key assigned to this node.
+     */
     int getApiKey();
+
+    /**
+     * Get the Endpoint this node is associated with.
+     */
     Endpoint getEndpoint();
 
     /**
@@ -67,6 +74,4 @@ public interface Node<T> extends EventObservable {
     }
 
     Codec<T> getCodec();
-
-    void dump();
 }

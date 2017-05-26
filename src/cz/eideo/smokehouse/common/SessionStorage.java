@@ -38,7 +38,6 @@ public class SessionStorage {
     /**
      * Flush into permanent storage. Called after a batch of changes.
      */
-    public void flush() {
-    }
+    public void flush() { }
 
 }

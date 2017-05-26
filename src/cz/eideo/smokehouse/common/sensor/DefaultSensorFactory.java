@@ -5,7 +5,7 @@ import cz.eideo.smokehouse.common.event.EventFactory;
 
 public class DefaultSensorFactory implements SensorFactory {
 
-    final NodeFactory nodeFactory;
+    private final NodeFactory nodeFactory;
     final EventFactory eventFactory;
 
     public DefaultSensorFactory(NodeFactory nodeFactory, EventFactory eventFactory) {

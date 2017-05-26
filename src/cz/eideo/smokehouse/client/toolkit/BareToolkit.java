@@ -5,15 +5,11 @@ import java.io.PrintWriter;
 /**
  * ConsoleToolkit for text outputs without colors.
  */
-class BareToolkit extends ConsoleToolkit {
+class BareToolkit implements ConsoleToolkit {
 
-    PrintWriter writer;
+    final PrintWriter writer;
 
-    public void flush() {
-        writer.flush();
-    }
-
-    public BareToolkit(PrintWriter writer) {
+    BareToolkit(PrintWriter writer) {
         this.writer = writer;
         clearScreen();
     }
@@ -21,17 +17,22 @@ class BareToolkit extends ConsoleToolkit {
     boolean lineStarted = false;
     String linePrefix;
 
+    @Override
     public void clearScreen() {
         for (int i = 0; i < 80; i++)
             nextLine();
     }
 
+    @Override
     public void goHome() {
         clearScreen();
         lineStarted = false;
     }
 
-    private void startLine() {
+    /**
+     * Print the prefix, if not yet printed on this line.
+     */
+    protected void startLine() {
         if (lineStarted || linePrefix == null)
             return;
 
@@ -39,26 +40,29 @@ class BareToolkit extends ConsoleToolkit {
         lineStarted = true;
     }
 
+    @Override
     public void setPrefix(String prefix) {
         linePrefix = prefix;
     }
 
+    @Override
     public void nextLine() {
         startLine();
         writer.println();
         lineStarted = false;
     }
 
+    @Override
     public void printf(String format, Object... args) {
         startLine();
         writer.printf(format, args);
     }
 
-    public void setColor(Color color) {
+    @Override
+    public void flush() {
+        writer.flush();
     }
 
-    public void resetColor() {
-    }
 
 
 }

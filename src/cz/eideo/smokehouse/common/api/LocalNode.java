@@ -9,35 +9,31 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Storage nodes stores their value and uses codecs for writing and reading.
- *
- * @param <T>
+ * The LocalNode is the master, owning the value being shared through the API.
  */
-
 public class LocalNode<T> extends EventObservableObject implements Node<T> {
+
+    private final static Logger logger = Logger.getLogger(LocalNode.class.getName());
 
     private final Endpoint API;
     private final int key;
-
     private final Codec<T> codec;
-    private final String name;
 
     private T value = null;
 
-    final static Logger logger = Logger.getLogger(LocalNode.class.getName());
-
-    public LocalNode(Endpoint endpoint, Codec<T> codec, String name) {
+    private LocalNode(Endpoint endpoint, Codec<T> codec, String name) {
         this.codec = codec;
         this.API = endpoint;
-        this.name = name;
         key = endpoint.assignKey();
         endpoint.addNode(this);
     }
 
+    @Override
     public synchronized T waitForValue() {
         return value;
     }
 
+    @Override
     public synchronized void setValue(T value) {
         try {
             // Avoid unnecessarily sending the same value
@@ -72,22 +68,14 @@ public class LocalNode<T> extends EventObservableObject implements Node<T> {
         // ignore messages sent to ourselves
     }
 
-    /**
-     * Wait until we have a value, then become a master.
-     */
     @Override
     public boolean isMaster() {
+        // Wait until we have a value, then become a master.
         return value != null;
     }
 
     public Codec<T> getCodec() {
         return codec;
-    }
-
-    @Override
-    public void dump() {
-        System.err.print(name + " = ");
-        System.err.println(value);
     }
 
     public static NodeFactory createNodeFactory(final Endpoint endpoint) {

@@ -9,22 +9,28 @@ import java.util.Queue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * The reference dispatcher implementation.
+ *
+ * All the features of the event loop are implemented here, either in the Dispatcher or the EventImpl.
+ */
 public class Dispatcher implements Runnable, EventFactory {
-
-    Queue<EventImpl> eventQueue = new ArrayDeque<>();
-    PriorityQueue<EventImpl> delayedEvents = new PriorityQueue<>(1, Comparator.comparing(a -> a.scheduledAt));
-
-    volatile boolean stopped = false;
 
     private final static Logger logger = Logger.getLogger(Dispatcher.class.getName());
 
+    private final Queue<EventImpl> eventQueue = new ArrayDeque<>();
+    private final PriorityQueue<EventImpl> delayedEvents = new PriorityQueue<>(1, Comparator.comparing(a -> a.scheduledAt));
+    private volatile boolean stopped = false;
+
+    /**
+     * The Event implementation this dispatcher uses.
+     */
     private class EventImpl implements Event {
 
-        boolean scheduled = false;
-        Instant scheduledAt = null;
-        long scheduleRate = 0;
-
-        final Runnable callback;
+        private boolean scheduled = false;
+        private Instant scheduledAt = null;
+        private long scheduleRate = 0;
+        private final Runnable callback;
 
         private EventImpl(Runnable callback) {
             this.callback = callback;
@@ -51,11 +57,16 @@ public class Dispatcher implements Runnable, EventFactory {
             this.scheduleRate = rateMs;
         }
 
-        synchronized void fire() {
+        private synchronized void fire() {
             callback.run();
         }
 
-        boolean shallFire() {
+
+        /**
+         * Returns true, of the event should be fired just now.
+         * @return whether we should fire the event
+         */
+        private boolean shallFire() {
             return scheduledAt == null || !scheduledAt.isAfter(Instant.now());
         }
     }
@@ -65,6 +76,9 @@ public class Dispatcher implements Runnable, EventFactory {
         return new EventImpl(callback);
     }
 
+    /**
+     * Insert the event into the queue.
+     */
     private synchronized void scheduleEvent(EventImpl event) {
         if (!event.scheduled) {
             event.scheduled = true;
@@ -73,14 +87,17 @@ public class Dispatcher implements Runnable, EventFactory {
         }
     }
 
-    @Override
+    /**
+     * The event-loop implementation.
+     * Unless explicitly stopped, never returns.
+     */
     public void run() {
         try {
             while (!stopped) {
                 EventImpl event = getNextEvent();
                 event.scheduled = false;
 
-                // We will need the value to reschedule the event
+                // We will need the Instant to accurately reschedule the event
                 if (event.scheduleRate > 0 && event.scheduledAt == null)
                     event.scheduledAt = Instant.now();
 
@@ -99,7 +116,7 @@ public class Dispatcher implements Runnable, EventFactory {
      * Return next event to be fired.
      *
      * @return event that should be fired
-     * @throws InterruptedException
+     * @throws InterruptedException when the waiting was interrupted
      */
     private synchronized EventImpl getNextEvent() throws InterruptedException {
         do {
@@ -133,7 +150,10 @@ public class Dispatcher implements Runnable, EventFactory {
     }
 
 
+    /**
+     * Stop the loop processing.
+     */
     public void stop() {
         stopped = true;
     }
-    }
+}

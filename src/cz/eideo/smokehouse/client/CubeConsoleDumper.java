@@ -1,7 +1,5 @@
 package cz.eideo.smokehouse.client;
 
-import cz.eideo.smokehouse.common.event.Event;
-import cz.eideo.smokehouse.common.event.EventFactory;
 import cz.eideo.smokehouse.common.setup.CubeSetup;
 import cz.eideo.smokehouse.common.sensor.*;
 import cz.eideo.smokehouse.common.statistics.*;
@@ -61,6 +59,12 @@ class CubeConsoleDumper {
         printLine(9, 3);
         printLine(12, 2);
         printLine(15, 1);
+        toolkit.nextLine();
+        toolkit.nextLine();
+
+        toolkit.printf("current temperature:%n\tred - raising%n\tblue - falling%n%n");
+        toolkit.printf("(sliding average):%n\tred - too high%n\tyellow - OK%n\tblue - too low%n");
+
         toolkit.goHome();
         toolkit.flush();
     }
@@ -83,7 +87,7 @@ class CubeConsoleDumper {
 
 
     /**
-     * Print one first of thermometers
+     * Print one row of thermometers
      *
      * @param first index of first thermometer in the line
      * @param z     depth of this line (for 3D effect)

@@ -12,8 +12,7 @@ import cz.eideo.smokehouse.common.setup.CubeSetup;
 import java.io.IOException;
 
 /**
- * Simple debugging client instance. This client just dumps any source that changes its value.
- * It's not very convenient for real smoking, but serves well to test the functionality.
+ * Simple command line client.
  * <p>
  * Client communicates with server using multicast API to avoid having to specify server address.
  * The typical case is when server and client are both on the same L2 network, on which multicast
@@ -21,40 +20,40 @@ import java.io.IOException;
  */
 class Client {
 
-    private final Session session;
-
-    private final NodeFactory nodeFactory;
     private final Dispatcher eventDispatcher = new Dispatcher();
 
-    private final ClientOptions options;
+    Client(ClientOptions options) throws IOException {
+        // Initialize the API
+        final MulticastEndpoint clientAPI = new MulticastEndpoint(eventDispatcher, options.multicastEndpointOptions);
 
-    Client(ClientOptions options) {
-        try {
-            this.options = options;
-            MulticastEndpoint clientAPI = new MulticastEndpoint(eventDispatcher, options.multicastEndpointOptions);
+        // Nodes will be RemoteNodes
+        final NodeFactory nodeFactory = RemoteNode.createNodeFactory(clientAPI);
 
-            nodeFactory = RemoteNode.createNodeFactory(clientAPI);
-            SessionStorage storage = new SessionStorage(nodeFactory);
+        // Use the simplest session storage
+        final SessionStorage storage = new SessionStorage(nodeFactory);
 
-            session = new Session(storage, clientAPI);
-        } catch (IOException e) {
-            throw new RuntimeException("Nezdařila se inicializace klienta: " + e.getMessage());
-        }
-    }
+        // Make sure the setup is the CubeSetup
+        if (!storage.getSetupClass().equals(CubeSetup.class))
+            throw new RuntimeException("This server can only work with CubeSetup.");
 
-    void run() {
+        // Load the setup
+        final Session session = new Session(storage, clientAPI);
         session.loadSetup();
-        CubeSetup s = (CubeSetup) session.getSetup();
-        if (s == null)
-            throw new RuntimeException("Pro tento setup není klient připraven.");
 
+        CubeSetup s = (CubeSetup) session.getSetup();
+        assert s != null;
+
+        // Create sensors as RemoteNodes
         s.setSensorFactory(new DefaultSensorFactory(nodeFactory, eventDispatcher));
         s.setupSensors();
 
-        CubeConsoleDumper dumper = new CubeConsoleDumper(s);
-
+        // Create the dumper and attach the event
+        final CubeConsoleDumper dumper = new CubeConsoleDumper(s);
         s.getCubeArea().attachObserver(eventDispatcher.createEvent(dumper::dump));
+    }
 
+    void run() {
+        // Let the dispatcher do the hard job
         eventDispatcher.run();
     }
 }

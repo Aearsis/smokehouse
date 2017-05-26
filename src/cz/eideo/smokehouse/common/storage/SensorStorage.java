@@ -8,6 +8,12 @@ import java.time.Instant;
  */
 public interface SensorStorage<T> {
 
+    /**
+     * Not yet used.
+     *
+     * @param time time in which to query for value
+     * @return value, that the sensor had in time
+     */
     T getValueInTime(Instant time);
 
 }

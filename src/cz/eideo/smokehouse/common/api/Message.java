@@ -6,7 +6,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-class Packet implements Comparable<Packet> {
+class Message implements Comparable<Message> {
 
     /* These are not in enum because we want them to be sent as integers */
     static final byte QUERY = 'Q';
@@ -18,12 +18,12 @@ class Packet implements Comparable<Packet> {
     /* Used when writing only */
     private byte[] serialized;
 
-    Packet(byte type, int key) {
+    Message(byte type, int key) {
         this.type = type;
         this.key = key;
     }
 
-    Packet(DataInputStream stream) throws IOException {
+    Message(DataInputStream stream) throws IOException {
         type = stream.readByte();
         key = stream.readByte();
     }
@@ -37,8 +37,8 @@ class Packet implements Comparable<Packet> {
     }
 
 
-    static Packet valueFromNode(int key, Node node) throws IOException {
-        Packet pkt = new Packet(VALUE, key);
+    static Message valueFromNode(int key, Node node) throws IOException {
+        Message pkt = new Message(VALUE, key);
 
         ByteArrayOutputStream buf = new ByteArrayOutputStream(256);
         DataOutputStream stream = new DataOutputStream(buf);
@@ -49,7 +49,7 @@ class Packet implements Comparable<Packet> {
     }
 
     @Override
-    public int compareTo(Packet other) {
+    public int compareTo(Message other) {
         if (this.type != other.type)
             return this.type - other.type;
         if (this.key != other.key)
@@ -62,10 +62,9 @@ class Packet implements Comparable<Packet> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Packet packet = (Packet) o;
+        Message message = (Message) o;
 
-        if (type != packet.type) return false;
-        return key == packet.key;
+        return type == message.type && key == message.key;
     }
 
     @Override

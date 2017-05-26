@@ -4,11 +4,14 @@ import cz.eideo.smokehouse.common.api.codec.Codec;
 
 /**
  * Simple namespacing node factory decorator.
+ *
+ * Allows us to create nodes with semantical name along.
+ * The name is used only for debugging purposes.
  */
 public class NamespacedNodeFactory implements NodeFactory {
 
-    final NodeFactory decorated;
-    final String namespace;
+    private final NodeFactory decorated;
+    private final String namespace;
 
     public NamespacedNodeFactory(NodeFactory decorated, String namespace) {
         this.decorated = decorated;

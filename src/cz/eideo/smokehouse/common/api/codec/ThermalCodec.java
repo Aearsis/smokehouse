@@ -20,13 +20,13 @@ public enum ThermalCodec implements Codec<Double> {
             stream.writeShort(Short.MAX_VALUE);
         else {
             int v = (int) (value * (1 << 8));
-            stream.writeChar(v);
+            stream.writeShort(v);
         }
     }
 
     @Override
     public Double decode(DataInputStream stream) throws IOException {
-        int v = stream.readChar();
+        int v = stream.readShort();
         return (double) v / (1 << 8);
     }
 }

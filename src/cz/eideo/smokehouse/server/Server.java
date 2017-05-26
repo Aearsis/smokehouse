@@ -16,57 +16,55 @@ import java.sql.SQLException;
 
 /**
  * Server instance. It initializes the environment for running server.
- * <p>
- * Session name is supplied on start. Server has three responsibilities:
- * 1) Intialize feeders according to the HW
- * 2) Load the session, give it storage and connect feeders
- * 3) Provide network API to the session
  */
 class Server {
 
-    private final Session session;
-    private final SQLiteStorage db;
-    private final ServerOptions options;
-    private final NodeFactory nodeFactory;
+    private final LogFeeder logFeeder;
 
     private final Dispatcher eventDispatcher = new Dispatcher();
 
-    Server(ServerOptions options) {
-        try {
-            this.options = options;
-            MulticastEndpoint serverAPI = new MulticastEndpoint(eventDispatcher, options.multicastEndpointOptions);
+    Server(ServerOptions options) throws IOException, SQLException, ClassNotFoundException {
+        // Create and run the API endpoint
+        MulticastEndpoint serverAPI = new MulticastEndpoint(eventDispatcher, options.multicastEndpointOptions);
 
-            db = SQLiteStorage.fromFile(options.dbName);
-            nodeFactory = LocalNode.createNodeFactory(serverAPI);
-            SQLiteSessionStorage storage = new SQLiteSessionStorage(nodeFactory, db.getNamespace("session"));
+        // Nodes inside sensors will be LocalNodes
+        NodeFactory nodeFactory = LocalNode.createNodeFactory(serverAPI);
 
-            if (storage.getState() == Session.State.NEW) {
-                storage.setSetupClass(CubeSetup.class);
-                storage.setState(Session.State.INITIALIZED);
-                storage.flush();
-            }
+        // Initialize storage
+        SQLiteStorage db = SQLiteStorage.fromFile(options.dbName);
+        SQLiteSessionStorage storage = new SQLiteSessionStorage(nodeFactory, db.getNamespace("session"));
 
-            session = new Session(storage, serverAPI);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException("Nenalezena odpovídající konfigurace udírny.", e);
-        } catch (IOException | SQLException e) {
-            throw new RuntimeException("Nezdařila se inicializace serveru: " + e.getMessage(), e);
+        // New session starting?
+        if (storage.getState() == Session.State.NEW) {
+            storage.setSetupClass(CubeSetup.class);
+            storage.setState(Session.State.INITIALIZED);
+            storage.flush();
         }
-    }
 
-    void run() throws Exception {
-        session.loadSetup();
-        CubeSetup s = (CubeSetup) session.getSetup();
-
-        if (s == null)
+        // Make sure the setup is the CubeSetup
+        if (!storage.getSetupClass().equals(CubeSetup.class))
             throw new RuntimeException("This server can only work with CubeSetup.");
 
+        // Create and run the session
+        Session session = new Session(storage, serverAPI);
+        session.loadSetup();
+
+        CubeSetup s = (CubeSetup) session.getSetup();
+        assert s != null;
+
+        // Create the sensors, backed by SQLite
         s.setSensorFactory(new SQLiteStoredSensorFactory(nodeFactory, eventDispatcher, db));
         s.setupSensors();
 
-        LogFeeder logFeeder = new LogFeeder(options.logStream, s, options.replaySpeedup, eventDispatcher);
+        // Initialize the feeder
+        logFeeder = new LogFeeder(options.logStream, s.getCubeArea(), options.replaySpeedup, eventDispatcher);
+    }
+
+    void run() {
+        // Schedule the first feeding event...
         logFeeder.run();
 
+        // ... and finish with the event loop
         eventDispatcher.run();
     }
 }

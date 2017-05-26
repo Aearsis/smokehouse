@@ -23,12 +23,12 @@ import java.util.HashMap;
  * Every column has a ThermoArea, numbered as the upper sensor.
  * Planes has thermoareas (0 up, 1 bottom) and the whole cube has an area.
  */
-public class CubeSetup extends Setup implements ThermometerArray {
+public class CubeSetup extends Setup {
 
     private Thermometer[] thermometers;
     private ThermoArea[] thermoAreas;
 
-    final static HashMap<Integer, String> columnNames = new HashMap<Integer, String>() {{
+    private final static HashMap<Integer, String> columnNames = new HashMap<Integer, String>() {{
         put(0, "back-left");    put(1, "back-middle");  put(2, "back-right");
         put(3, "middle-left");  put(4, "middle");       put(5, "middle-right");
         put(6, "front-left");   put(7, "front-middle"); put(8, "front-right");
@@ -36,10 +36,8 @@ public class CubeSetup extends Setup implements ThermometerArray {
 
     private void createThermometer(int i) {
         try {
-            StringBuilder nameBuilder = new StringBuilder();
-            nameBuilder.append(i >= 9 ? "bottom" : "top").append("-");
-            nameBuilder.append(columnNames.get(i % 9));
-            Thermometer t = thermometers[i] = sensorFactory.createThermometer(nameBuilder.toString());
+            final String name = (i >= 9 ? "bottom-" : "top-") + columnNames.get(i % 9);
+            final Thermometer t = thermometers[i] = sensorFactory.createThermometer(name);
             getColumnArea(i % 9).addThermometer(t);
             getPlaneArea(i / 9).addThermometer(t);
             getCubeArea().addThermometer(t);
@@ -67,7 +65,6 @@ public class CubeSetup extends Setup implements ThermometerArray {
             createThermometer(i);
     }
 
-    @Override
     public Thermometer getThermometer(int i) {
         return thermometers[i];
     }

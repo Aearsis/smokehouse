@@ -7,12 +7,12 @@ import java.io.PrintWriter;
  * <p>
  * Also, enable abstraction so that using classes must not care about whether output supports features.
  */
-public abstract class ConsoleToolkit {
+public interface ConsoleToolkit {
 
     /**
      * @return the best toolkit for current output
      */
-    public static ConsoleToolkit getToolkit() {
+    static ConsoleToolkit getToolkit() {
         if (System.console() == null) {
             return new BareToolkit(new PrintWriter(System.out));
         } else {
@@ -23,7 +23,7 @@ public abstract class ConsoleToolkit {
     /**
      * Colors for terminal output
      */
-    public enum Color {
+    enum Color {
         BLACK("\u001B[30m"), RED("\u001B[31m"), GREEN("\u001B[32m"),
         YELLOW("\u001B[33m"), BLUE("\u001B[34m"), PURPLE("\u001B[35m"),
         CYAN("\u001B[36m"), WHITE("\u001B[37m"), DEFAULT("\u001B[0m");
@@ -35,23 +35,48 @@ public abstract class ConsoleToolkit {
         }
     }
 
-    abstract public void clearScreen();
+    /**
+     * Clear all that is written on the screen.
+     */
+    void clearScreen();
 
     /**
      * Move the cursor to a fixed place (usually top left corner)
      */
-    abstract public void goHome();
+    void goHome();
 
-    abstract public void nextLine();
+    /**
+     * Advance to the next line.
+     */
+    void nextLine();
 
-    abstract public void flush();
+    /**
+     * Flush the output.
+     */
+    void flush();
 
-    abstract public void setPrefix(String prefix);
+    /**
+     * Set a prefix.
+     * @param prefix a string that will precede every line on output
+     */
+    void setPrefix(String prefix);
 
-    abstract public void printf(String format, Object... args);
+    /**
+     * Standard printf. Do not use newline if you use prefixes.
+     * @param format printf format string
+     * @param args arguments for printf
+     */
+    void printf(String format, Object... args);
 
-    abstract public void setColor(Color color);
+    /**
+     * Set the color of font (only if the terminal supports it).
+     * @param color Color to set
+     */
+    default void setColor(Color color) {}
 
-    abstract public void resetColor();
+    /**
+     * Reset to the default color.
+     */
+    default void resetColor() {}
 
 }
